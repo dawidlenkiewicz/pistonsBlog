@@ -718,7 +718,10 @@ async function loadSchedule() {
     );
     if (!res.ok) throw new Error('Schedule API error ' + res.status);
     const wrapper = await res.json();
+    console.log('allorigins status:', wrapper.status, 'contents length:', wrapper.contents?.length);
+    if (!wrapper.contents) throw new Error('Proxy returned empty contents');
     const json = JSON.parse(wrapper.contents);
+    console.log('ESPN keys:', Object.keys(json));
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
