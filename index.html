@@ -857,7 +857,6 @@ async function loadSelectedGame() {
   badge.style.background = detWon ? 'var(--red)' : '#555';
 
   // Load box score
-  console.log('fetchBoxScore gameId:', comp.id, 'event.id:', event.id);
   await fetchBoxScore(comp.id || event.id, oppAbb);
 }
 
@@ -954,32 +953,19 @@ async function fetchAllInjuries() {
       if (!r.ok) return;
       const json = await r.json();
       const athletes = json.athletes || [];
-      if (id === 25) {
-        athletes.forEach(p => {
-          console.log('OKC', p.displayName, '| status:', JSON.stringify(p.status), '| injuries:', JSON.stringify(p.injuries));
-        });
-      }
       const injured = [];
       athletes.forEach(p => {
-        // Check both injuries array and top-level status fields
-        const injuryStatus = p.injuryStatus || p.status;
-        const hasInjury = p.injuries?.length || (injuryStatus && !['Active','active',''].includes(injuryStatus));
-        if (!hasInjury) return;
-        if (p.injuries?.length) {
-          p.injuries.forEach(inj => {
-            const status = inj.status || injuryStatus || 'Out';
-            if (['active','healthy',''].includes(status.toLowerCase())) return;
-            const injType = inj.type || inj.description || 'Injury';
-            injured.push({ name: p.displayName || '?', status, injType, comment: inj.longComment || inj.shortComment || '' });
-          });
-        } else if (injuryStatus && !['active','healthy'].includes(injuryStatus.toLowerCase())) {
-          injured.push({ name: p.displayName || '?', status: injuryStatus, injType: 'Injury', comment: '' });
-        }
+        if (!p.injuries?.length) return;
+        p.injuries.forEach(inj => {
+          // inj.status is a plain string like "Out", "Day-To-Day", "Questionable"
+          const status = inj.status || 'Out';
+          if (status.toLowerCase() === 'active') return;
+          injured.push({ name: p.displayName || '?', status });
+        });
       });
       if (injured.length) result[teamName] = injured;
     } catch {}
   }));
-  console.log('Injuries loaded for teams:', Object.keys(result));
   injuriesCache = result;
   return result;
 }
