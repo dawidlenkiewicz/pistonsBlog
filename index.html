@@ -954,26 +954,27 @@ async function fetchAllInjuries() {
       if (!r.ok) return;
       const json = await r.json();
       const athletes = json.athletes || [];
-      if (id === 8) console.log('DET roster athletes groups:', athletes.length, JSON.stringify(athletes).slice(0, 600));
       const injured = [];
-      athletes.forEach(group => {
-        // roster groups: {items: [...]} or flat array
-        const players = group.items || (Array.isArray(group) ? group : [group]);
-        players.forEach(p => {
-          if (!p.injuries?.length) return;
+      // roster is a flat array of player objects
+      athletes.forEach(p => {
+        if (id === 8) {
+          const keys = Object.keys(p).filter(k => ['injuries','status','injuryStatus','injury'].includes(k));
+          if (keys.length) console.log('DET injured player:', p.displayName, JSON.stringify(Object.fromEntries(keys.map(k=>[k,p[k]]))));
+        }
+        // Check both injuries array and top-level status fields
+        const injuryStatus = p.injuryStatus || p.status;
+        const hasInjury = p.injuries?.length || (injuryStatus && !['Active','active',''].includes(injuryStatus));
+        if (!hasInjury) return;
+        if (p.injuries?.length) {
           p.injuries.forEach(inj => {
-            const status = inj.status || 'Out';
-            // Only show active injuries (not healthy)
-            if (status.toLowerCase() === 'active' || status.toLowerCase() === 'healthy') return;
-            const injType = inj.type || inj.longComment?.match(/\(([^)]+)\)/)?.[1] || 'Injury';
-            injured.push({
-              name: p.displayName || p.fullName || '?',
-              status,
-              injType,
-              comment: inj.longComment || ''
-            });
+            const status = inj.status || injuryStatus || 'Out';
+            if (['active','healthy',''].includes(status.toLowerCase())) return;
+            const injType = inj.type || inj.description || 'Injury';
+            injured.push({ name: p.displayName || '?', status, injType, comment: inj.longComment || inj.shortComment || '' });
           });
-        });
+        } else if (injuryStatus && !['active','healthy'].includes(injuryStatus.toLowerCase())) {
+          injured.push({ name: p.displayName || '?', status: injuryStatus, injType: 'Injury', comment: '' });
+        }
       });
       if (injured.length) result[teamName] = injured;
     } catch {}
