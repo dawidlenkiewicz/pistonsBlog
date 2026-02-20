@@ -764,8 +764,7 @@ async function loadSchedule() {
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
-    const allEvents = json.events || json.games || [];
-    scheduleGames = allEvents
+    scheduleGames = json.events
       .sort((a,b) => new Date(b.date) - new Date(a.date));
 
     if (!scheduleGames.length) {
