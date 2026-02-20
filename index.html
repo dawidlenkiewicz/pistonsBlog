@@ -953,9 +953,12 @@ async function fetchAllInjuries() {
       const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${id}/roster`);
       if (!r.ok) return;
       const json = await r.json();
-      const athletes = json.athletes || [];
+      if (id === 25) console.log('OKC roster json keys:', Object.keys(json), 'athletes count:', (json.athletes||[]).length, 'first item type:', typeof json.athletes?.[0], Array.isArray(json.athletes?.[0]));
+      // roster response: {athletes: [{items:[...]}, {items:[...]}, ...]} grouped by position
+      const athleteGroups = json.athletes || [];
+      const athletes = athleteGroups.flatMap(g => g.items || (g.id ? [g] : []));
+      if (id === 25) console.log('OKC flattened athletes:', athletes.length);
       const injured = [];
-      // roster is a flat array of player objects
       athletes.forEach(p => {
         if (id === 25) {
           console.log('OKC', p.displayName, 'status:', JSON.stringify(p.status), 'injuries:', JSON.stringify(p.injuries));
