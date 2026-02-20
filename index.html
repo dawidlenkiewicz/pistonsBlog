@@ -196,6 +196,7 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
       <div class="team-name-sb">Detroit Pistons</div>
     </div>
   </div>
+  <span id="sb-det-home" data-home="true" style="display:none;"></span>
 
   <!-- GAME NOTES -->
   <div class="game-notes-section">
@@ -563,28 +564,38 @@ function buildExportHTML() {
 
 <!-- SCOREBOARD -->
 ${(()=>{
-  const awayScore = document.getElementById('sb-away-score').textContent;
-  const detScore  = document.getElementById('sb-det-score').textContent;
-  const awayName  = document.getElementById('sb-away-name').textContent;
-  const awayLogo  = document.getElementById('sb-away-logo').src;
-  const sbMeta    = document.getElementById('sb-meta').textContent;
-  const badge     = document.getElementById('sb-badge').textContent;
-  const detWon    = parseInt(detScore) > parseInt(awayScore);
+  const awayScore  = document.getElementById('sb-away-score').textContent;
+  const detScore   = document.getElementById('sb-det-score').textContent;
+  const awayName   = document.getElementById('sb-away-name').textContent;
+  const awayLogo   = document.getElementById('sb-away-logo').src;
+  const sbMeta     = document.getElementById('sb-meta').textContent;
+  const badge      = document.getElementById('sb-badge').textContent;
+  const detIsHome  = document.getElementById('sb-det-home')?.dataset?.home === 'true';
+  const detWon     = parseInt(detScore) > parseInt(awayScore);
+
+  // Home team always on right
+  const leftName  = detIsHome ? awayName      : 'Detroit Pistons';
+  const leftLogo  = detIsHome ? awayLogo      : teamLogos.DET;
+  const leftScore = detIsHome ? awayScore     : detScore;
+  const rightName = detIsHome ? 'Detroit Pistons' : awayName;
+  const rightLogo = detIsHome ? teamLogos.DET : awayLogo;
+  const rightScore= detIsHome ? detScore      : awayScore;
+
   return `<div style="${F}background:#fff;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
   <div style="text-align:center;min-width:100px;">
-    <img src="${awayLogo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
-    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${awayName}</div>
+    <img src="${leftLogo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${leftName}</div>
   </div>
   <div style="text-align:center;flex:1;">
     <div style="${F}font-size:68px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
-      <span style="color:#bbb;">${awayScore}</span><span style="color:#ddd;margin:0 6px;">:</span><span style="color:${RED};">${detScore}</span>
+      <span style="color:#bbb;">${leftScore}</span><span style="color:#ddd;margin:0 6px;">:</span><span style="color:${RED};">${rightScore}</span>
     </div>
     <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${sbMeta}</div>
     <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
   </div>
   <div style="text-align:center;min-width:100px;">
-    <img src="${teamLogos.DET}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
-    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">Detroit Pistons</div>
+    <img src="${rightLogo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${rightName}</div>
   </div>
 </div>`;
 })()}
@@ -833,6 +844,7 @@ async function loadSelectedGame() {
   document.getElementById('sb-away-score').textContent = oppScore;
   document.getElementById('sb-det-score').textContent  = detScore;
   document.getElementById('sb-meta').textContent       = fmtDate(event.date);
+  document.getElementById('sb-det-home').dataset.home  = (det.homeAway === 'home') ? 'true' : 'false';
   const badge = document.getElementById('sb-badge');
   badge.textContent      = detWon ? '🏆 Pistons Win' : '❌ Pistons Loss';
   badge.style.background = detWon ? 'var(--red)' : '#555';
@@ -919,52 +931,68 @@ let injuriesCache = null;
 async function fetchAllInjuries() {
   if (injuriesCache) return injuriesCache;
   const url = 'https://www.espn.com/nba/injuries';
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  // Try proxies in parallel
+  const tryProxy = async (makeUrl) => {
+    const r = await fetch(makeUrl(url));
+    if (!r.ok) throw new Error('not ok');
+    const text = await r.text();
+    const parsed = JSON.parse(text);
+    return parsed.contents || parsed; // allorigins wraps, others don't
+  };
+  let html = '';
   try {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error('proxy fail');
-    const data = await res.json();
-    const html = data.contents || '';
-    // Parse the HTML table rows — each team section followed by table rows
-    // Pattern: team name in img alt, then rows with player name, status, comment
-    const result = {};
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    // Each team section has an img with team name, followed by a table
-    const sections = doc.querySelectorAll('.TableBase');
-    // Also try matching by team headers
-    let currentTeam = '';
-    doc.querySelectorAll('img[data-mptype="image"], .injuries-wrap img, img').forEach(img => {
-      const alt = img.alt;
-      if (alt && alt.includes(' ')) currentTeam = alt; // team name alts have spaces
-    });
-    // Better approach: find all rows with player injury data
-    // ESPN injuries page structure: team heading then table rows
-    const allRows = doc.querySelectorAll('tr');
-    let teamName = '';
-    allRows.forEach(row => {
-      // Check if this is a team header row
-      const img = row.querySelector('img');
-      if (img && img.title) { teamName = img.title; return; }
-      const cells = row.querySelectorAll('td');
-      if (cells.length < 4) return;
-      const playerLink = cells[0]?.querySelector('a');
-      const playerName = playerLink?.textContent?.trim();
-      const status = cells[3]?.textContent?.trim();
-      const comment = cells[4]?.textContent?.trim() || '';
-      if (!playerName || !teamName) return;
-      if (!result[teamName]) result[teamName] = [];
-      // Extract injury type from comment — first parenthetical or first noun
-      const injMatch = comment.match(/\(([^)]+)\)/);
-      const injType = injMatch ? injMatch[1] : 'Injury';
-      result[teamName].push({ name: playerName, status, injType, comment });
-    });
-    injuriesCache = result;
-    return result;
+    html = await Promise.any([
+      tryProxy(u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`),
+      tryProxy(u => `https://corsproxy.io/?${encodeURIComponent(u)}`),
+    ]);
+    if (typeof html !== 'string') html = '';
   } catch(e) {
-    console.error('fetchAllInjuries failed:', e);
+    console.error('injuries proxy failed', e);
     return {};
   }
+
+  // Parse ESPN injuries page
+  // Structure: each team has a header with the team name, then a <table> with rows
+  const result = {};
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Walk through all elements — find team name headers then table rows
+  let currentTeam = '';
+  const allEls = doc.querySelectorAll('h2, h3, .injuries__teamName, [class*="TeamName"], tr, img[title]');
+
+  // Also try: ESPN renders team name as img title or as text near the table
+  // Scan the raw HTML for team patterns
+  const teamPattern = /(Atlanta Hawks|Boston Celtics|Brooklyn Nets|Charlotte Hornets|Chicago Bulls|Cleveland Cavaliers|Dallas Mavericks|Denver Nuggets|Detroit Pistons|Golden State Warriors|Houston Rockets|Indiana Pacers|LA Clippers|Los Angeles Lakers|Memphis Grizzlies|Miami Heat|Milwaukee Bucks|Minnesota Timberwolves|New Orleans Pelicans|New York Knicks|Oklahoma City Thunder|Orlando Magic|Philadelphia 76ers|Phoenix Suns|Portland Trail Blazers|Sacramento Kings|San Antonio Spurs|Toronto Raptors|Utah Jazz|Washington Wizards)/g;
+
+  // Split HTML into team sections using team names as delimiters
+  const sections = html.split(teamPattern);
+  // sections[0] = before first team, sections[1] = "Detroit Pistons", sections[2] = content after that, etc.
+  for (let i = 1; i < sections.length; i += 2) {
+    const teamName = sections[i];
+    const sectionHtml = sections[i+1] || '';
+    // Parse this section for table rows
+    const sDoc = parser.parseFromString('<table>' + sectionHtml + '</table>', 'text/html');
+    const rows = sDoc.querySelectorAll('tr');
+    const injuries = [];
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 4) return;
+      const playerName = cells[0]?.textContent?.trim();
+      if (!playerName || playerName === 'NAME') return;
+      const status = cells[3]?.textContent?.trim() || 'Out';
+      const comment = cells[4]?.textContent?.trim() || '';
+      // Extract injury type from comment — first parenthetical
+      const injMatch = comment.match(/\(([^)]+)\)/);
+      const injType = injMatch ? injMatch[1] : 'Injury';
+      injuries.push({ name: playerName, status, injType, comment });
+    });
+    if (injuries.length) result[teamName] = injuries;
+  }
+
+  console.log('Injuries loaded for teams:', Object.keys(result));
+  injuriesCache = result;
+  return result;
 }
 
 async function fetchInjuries(teamDisplayName) {
@@ -1019,14 +1047,37 @@ async function buildPreviewHTML() {
   const st = comp.status?.type;
   const completed = st?.completed === true || st?.state === 'post';
 
-  // W-L record (total)
-  const detRecord = det?.record?.[0]?.displayValue || det?.records?.find(r=>r.type==='total')?.summary || '';
-  const oppRecord = opp?.record?.[0]?.displayValue || opp?.records?.find(r=>r.type==='total')?.summary || '';
+  // Records & standings — check all possible ESPN schedule data fields
+  console.log('DET competitor:', JSON.stringify(det).slice(0,400));
+  console.log('OPP competitor:', JSON.stringify(opp).slice(0,400));
 
-  // Conference standing — comes from linescores or we fetch standings
-  // For now use the record position text from competitor if available
-  const detStanding = det?.curatedRank?.current ? `${det.curatedRank.current}${ordinal(det.curatedRank.current)} in Conf` : '';
-  const oppStanding = opp?.curatedRank?.current ? `${opp.curatedRank.current}${ordinal(opp.curatedRank.current)} in Conf` : '';
+  const detRecord = det?.record?.[0]?.displayValue
+    || det?.records?.[0]?.displayValue
+    || det?.records?.find(r=>r.name==='overall')?.displayValue
+    || det?.records?.find(r=>r.type==='total')?.summary || '';
+  const oppRecord = opp?.record?.[0]?.displayValue
+    || opp?.records?.[0]?.displayValue
+    || opp?.records?.find(r=>r.name==='overall')?.displayValue
+    || opp?.records?.find(r=>r.type==='total')?.summary || '';
+
+  // Standings fetch — ESPN standings API
+  let detStanding = '', oppStanding = '';
+  try {
+    const standUrl = 'https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026&type=0';
+    const sRes = await fetch(standUrl);
+    if (sRes.ok) {
+      const sJson = await sRes.json();
+      const allTeams = (sJson.standings?.entries || []);
+      allTeams.forEach(entry => {
+        const abbr = entry.team?.abbreviation;
+        const rank = entry.stats?.find(s => s.name === 'playoffSeed' || s.abbreviation === 'SEED')?.value
+          || entry.stats?.find(s => s.name === 'rank')?.value;
+        const confName = entry.team?.conferenceId === '2' ? 'East' : 'West';
+        if (abbr === 'DET' && rank) detStanding = `${rank}${ordinal(rank)} in ${confName}`;
+        if (abbr === (opp?.team?.abbreviation) && rank) oppStanding = `${rank}${ordinal(rank)} in ${confName}`;
+      });
+    }
+  } catch(e) { console.log('standings fetch failed', e); }
 
   const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
   const oppLogo = opp?.team?.logos?.[0]?.href || '';
