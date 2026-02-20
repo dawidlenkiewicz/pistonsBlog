@@ -954,6 +954,7 @@ async function fetchAllInjuries() {
       if (!r.ok) return;
       const json = await r.json();
       const athletes = json.athletes || [];
+      if (id === 8) console.log('DET roster athletes groups:', athletes.length, JSON.stringify(athletes).slice(0, 600));
       const injured = [];
       athletes.forEach(group => {
         // roster groups: {items: [...]} or flat array
