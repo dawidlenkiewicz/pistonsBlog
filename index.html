@@ -954,11 +954,11 @@ async function fetchAllInjuries() {
       if (!r.ok) return;
       const json = await r.json();
       const athletes = json.athletes || [];
+      if (id === 25) console.log('OKC raw athletes[0]:', JSON.stringify(athletes[0]).slice(0,500));
+      if (id === 25) console.log('OKC raw athletes[1]:', JSON.stringify(athletes[1]).slice(0,500));
+      if (id === 25) console.log('OKC raw athletes[5]:', JSON.stringify(athletes[5]).slice(0,500));
       const injured = [];
       athletes.forEach(p => {
-        if (id === 25) {
-          console.log('OKC', p.displayName, 'status:', JSON.stringify(p.status), 'injuries:', JSON.stringify(p.injuries));
-        }
         // Check both injuries array and top-level status fields
         const injuryStatus = p.injuryStatus || p.status;
         const hasInjury = p.injuries?.length || (injuryStatus && !['Active','active',''].includes(injuryStatus));
