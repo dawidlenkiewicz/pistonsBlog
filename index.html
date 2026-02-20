@@ -791,8 +791,8 @@ async function loadSchedule() {
       const oppName = oppC?.team?.shortDisplayName || oppC?.team?.abbreviation || '???';
       let label;
       if (completed) {
-        const detScore = detC?.score?.displayValue ?? detC?.score?.value ?? '?';
-        const oppScore = oppC?.score?.displayValue ?? oppC?.score?.value ?? '?';
+        const detScore = detC?.score?.displayValue ?? (detC?.score !== undefined ? String(Math.round(detC.score)) : '?');
+        const oppScore = oppC?.score?.displayValue ?? (oppC?.score !== undefined ? String(Math.round(oppC.score)) : '?');
         const won = detC?.winner;
         const result = won ? 'W' : 'L';
         label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  ${result} ${detScore}-${oppScore}`;
@@ -835,12 +835,13 @@ async function loadSelectedGame() {
     opp = detIsFirst ? competitors[1] : competitors[0];
   }
   if (!opp) { console.error('Could not find competitors', comp); return; }
-  const detScore = det?.score?.displayValue ?? det?.score ?? '?';
-  const oppScore = opp.score?.displayValue ?? opp.score ?? '?';
+  const detScore = det?.score?.displayValue ?? (det?.score !== undefined ? String(Math.round(det.score)) : '?');
+  const oppScore = opp?.score?.displayValue ?? (opp?.score !== undefined ? String(Math.round(opp.score)) : '?');
   const detWon   = det?.winner ?? false;
   const oppAbb   = opp.team?.abbreviation || '';
-  // Use ESPN logo directly from competitor data (no mapping needed)
-  const oppLogo = opp.team?.logos?.[0]?.href || '';
+  // ESPN logo: try from data, fall back to ESPN CDN by abbreviation
+  const oppLogo = opp.team?.logos?.[0]?.href
+    || (oppAbb ? `https://a.espncdn.com/i/teamlogos/nba/500/${oppAbb.toLowerCase()}.png` : '');
 
   // Update scoreboard
   const logoEl = document.getElementById('sb-away-logo');
