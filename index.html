@@ -913,44 +913,75 @@ async function fetchBoxScore(gameId, oppAbb) {
   }
 }
 
-// ESPN team abbreviation → sports.core team id (for injuries endpoint)
-const ABB_TO_CORE_ID = {
-  ATL:1,BOS:2,CLE:4,NOP:3,CHI:4,DAL:6,DEN:7,DET:8,GSW:9,HOU:10,
-  LAC:12,LAL:13,MEM:29,MIA:14,MIL:15,MIN:16,BKN:17,NYK:18,ORL:19,IND:11,
-  PHI:20,PHX:21,POR:22,SAC:23,SAS:24,OKC:25,TOR:28,UTA:26,WAS:27,CHA:30,
-  NY:18, SA:24, GS:9, NO:3
-};
+// Cache injuries page to avoid fetching twice
+let injuriesCache = null;
 
-async function fetchInjuries(teamAbbr) {
-  const coreId = ABB_TO_CORE_ID[teamAbbr];
-  if (!coreId) return [];
+async function fetchAllInjuries() {
+  if (injuriesCache) return injuriesCache;
+  const url = 'https://www.espn.com/nba/injuries';
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
   try {
-    // sports.core API allows direct browser access (no proxy needed)
-    const res = await fetch(`https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/teams/${coreId}/injuries?limit=50`);
-    if (!res.ok) return [];
-    const json = await res.json();
-    const items = json.items || [];
-    // Each item is a reference URL, fetch each one
-    const details = await Promise.all(items.slice(0,15).map(async item => {
-      try {
-        const r = await fetch(item.$ref);
-        if (!r.ok) return null;
-        return await r.json();
-      } catch { return null; }
-    }));
-    return details.filter(Boolean);
-  } catch { return []; }
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error('proxy fail');
+    const data = await res.json();
+    const html = data.contents || '';
+    // Parse the HTML table rows — each team section followed by table rows
+    // Pattern: team name in img alt, then rows with player name, status, comment
+    const result = {};
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    // Each team section has an img with team name, followed by a table
+    const sections = doc.querySelectorAll('.TableBase');
+    // Also try matching by team headers
+    let currentTeam = '';
+    doc.querySelectorAll('img[data-mptype="image"], .injuries-wrap img, img').forEach(img => {
+      const alt = img.alt;
+      if (alt && alt.includes(' ')) currentTeam = alt; // team name alts have spaces
+    });
+    // Better approach: find all rows with player injury data
+    // ESPN injuries page structure: team heading then table rows
+    const allRows = doc.querySelectorAll('tr');
+    let teamName = '';
+    allRows.forEach(row => {
+      // Check if this is a team header row
+      const img = row.querySelector('img');
+      if (img && img.title) { teamName = img.title; return; }
+      const cells = row.querySelectorAll('td');
+      if (cells.length < 4) return;
+      const playerLink = cells[0]?.querySelector('a');
+      const playerName = playerLink?.textContent?.trim();
+      const status = cells[3]?.textContent?.trim();
+      const comment = cells[4]?.textContent?.trim() || '';
+      if (!playerName || !teamName) return;
+      if (!result[teamName]) result[teamName] = [];
+      // Extract injury type from comment — first parenthetical or first noun
+      const injMatch = comment.match(/\(([^)]+)\)/);
+      const injType = injMatch ? injMatch[1] : 'Injury';
+      result[teamName].push({ name: playerName, status, injType, comment });
+    });
+    injuriesCache = result;
+    return result;
+  } catch(e) {
+    console.error('fetchAllInjuries failed:', e);
+    return {};
+  }
 }
 
-function parseInjuryStatus(comment) {
-  // Extract status from comment text
-  const c = (comment || '').toLowerCase();
-  if (c.includes('out for the season') || c.includes('miss the remainder')) return 'Out for Season';
-  if (c.includes('day-to-day') || c.includes('questionable')) return 'Questionable';
-  if (c.includes('probable')) return 'Probable';
-  if (c.includes('out')) return 'Out';
-  if (c.includes('doubtful')) return 'Doubtful';
-  return 'Out';
+async function fetchInjuries(teamDisplayName) {
+  const all = await fetchAllInjuries();
+  // Try exact match first, then partial
+  if (all[teamDisplayName]) return all[teamDisplayName];
+  const key = Object.keys(all).find(k => k.includes(teamDisplayName) || teamDisplayName.includes(k.split(' ').pop()));
+  return key ? all[key] : [];
+}
+
+function parseInjuryStatus(status) {
+  const s = (status || '').toLowerCase();
+  if (s.includes('questionable') || s.includes('day-to-day')) return 'Questionable';
+  if (s.includes('probable')) return 'Probable';
+  if (s.includes('doubtful')) return 'Doubtful';
+  if (s.includes('out')) return 'Out';
+  return status || 'Out';
 }
 
 function injuryStatusColor(status) {
@@ -959,24 +990,7 @@ function injuryStatusColor(status) {
   return '#ef4444'; // Out / Doubtful
 }
 
-function buildInjuryHTML(injuries, teamName, F, accentColor) {
-  if (!injuries.length) return '';
-  const rows = injuries.map(inj => {
-    const name = inj.athlete?.displayName || '?';
-    const type = inj.type?.description || inj.type?.text || 'Injury';
-    const comment = (inj.details?.returnDate ? '' : '') + (inj.shortComment || inj.longComment || '');
-    const status = parseInjuryStatus(comment || inj.status?.type?.description || '');
-    const color = injuryStatusColor(status);
-    return `<div style="${F}display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #f0f0f0;">
-      <span style="${F}font-size:13px;color:#333;">${name} <span style="color:#999;font-size:11px;">— ${type}</span></span>
-      <span style="${F}font-size:11px;font-weight:700;color:${color};white-space:nowrap;margin-left:8px;">${status}</span>
-    </div>`;
-  }).join('');
-  return `<div style="${F}margin-top:8px;">
-    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accentColor};margin-bottom:8px;">${teamName} Injuries</div>
-    ${rows}
-  </div>`;
-}
+
 
 function ordinal(n) {
   const s = ['th','st','nd','rd'], v = n % 100;
@@ -1021,40 +1035,43 @@ async function buildPreviewHTML() {
   const oppAbb  = opp?.team?.abbreviation || '';
   const isHome  = det ? det.homeAway === 'home' : !event.name?.startsWith('Detroit');
 
-  // Score block — no time for upcoming, just date
-  let scoreBlock = '';
-  if (completed) {
-    const detScore = det?.score?.displayValue ?? det?.score ?? '?';
-    const oppScore = opp?.score?.displayValue ?? opp?.score ?? '?';
-    const detWon   = det?.winner;
-    const leftScore  = isHome ? detScore : oppScore;
-    const rightScore = isHome ? oppScore : detScore;
-    scoreBlock = `
-      <div style="${F}font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
-        <span style="color:${RED}">${leftScore}</span>
-        <span style="color:#ddd;margin:0 8px;font-size:36px;">–</span>
-        <span style="color:#bbb">${rightScore}</span>
-      </div>
-      <div style="${F}font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin:8px 0 10px;">${fmtDate(event.date)}</div>
-      <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 18px;text-transform:uppercase;">${detWon?'🏆 Pistons Win':'❌ Pistons Loss'}</div>`;
-  } else {
-    scoreBlock = `
-      <div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div>`;
-  }
+  // Score block — rebuilt after home/away assignment below; init for upcoming games
+  let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div>`;
 
   const teamCell = (logo, name, record, standing) => `
     <div style="text-align:center;min-width:120px;">
       <img src="${logo}" width="90" height="90" style="display:block;object-fit:contain;margin:0 auto 10px;">
-      <div style="${F}font-size:16px;font-weight:800;color:#111;margin-bottom:4px;">${name.split(' ').pop()}</div>
+      <div style="${F}font-size:16px;font-weight:800;color:#111;margin-bottom:4px;">${name}</div>
       <div style="${F}font-size:12px;font-weight:700;color:#333;">${record}</div>
       ${standing ? `<div style="${F}font-size:11px;color:#999;margin-top:2px;">${standing}</div>` : ''}
     </div>`;
 
+  // Home team always on RIGHT, away on LEFT
+  const homeTeam = isHome
+    ? {logo: detLogo, name: detName, record: detRecord, standing: detStanding, score: det?.score?.displayValue ?? '?', won: det?.winner}
+    : {logo: oppLogo, name: oppName, record: oppRecord, standing: oppStanding, score: opp?.score?.displayValue ?? '?', won: !det?.winner};
+  const awayTeam = isHome
+    ? {logo: oppLogo, name: oppName, record: oppRecord, standing: oppStanding, score: opp?.score?.displayValue ?? '?', won: !det?.winner}
+    : {logo: detLogo, name: detName, record: detRecord, standing: detStanding, score: det?.score?.displayValue ?? '?', won: det?.winner};
+
+  // Rebuild scoreBlock with correct home/away scores
+  if (completed) {
+    const detWon = det?.winner;
+    scoreBlock = `
+      <div style="${F}font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
+        <span style="color:#bbb">${awayTeam.score}</span>
+        <span style="color:#ddd;margin:0 8px;font-size:36px;">–</span>
+        <span style="color:${RED}">${homeTeam.score}</span>
+      </div>
+      <div style="${F}font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin:8px 0 10px;">${fmtDate(event.date)}</div>
+      <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 18px;text-transform:uppercase;">${detWon?'🏆 Pistons Win':'❌ Pistons Loss'}</div>`;
+  }
+
   const scoreboard = `
   <div style="${F}background:#fff;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};box-shadow:0 2px 8px rgba(0,0,0,0.07);">
-    ${isHome ? teamCell(detLogo, detName, detRecord, detStanding) : teamCell(oppLogo, oppName, oppRecord, oppStanding)}
+    ${teamCell(awayTeam.logo, awayTeam.name, awayTeam.record, awayTeam.standing)}
     <div style="text-align:center;flex:1;">${scoreBlock}</div>
-    ${isHome ? teamCell(oppLogo, oppName, oppRecord, oppStanding) : teamCell(detLogo, detName, detRecord, detStanding)}
+    ${teamCell(homeTeam.logo, homeTeam.name, homeTeam.record, homeTeam.standing)}
   </div>`;
 
   // Show scoreboard immediately, then load injuries
@@ -1062,18 +1079,17 @@ async function buildPreviewHTML() {
     '<div style="padding:16px 20px;font-family:Arial,sans-serif;color:#aaa;font-size:12px;background:#fff;margin-top:10px;">⏳ Loading injury report…</div>';
 
   const [detInjuries, oppInjuries] = await Promise.all([
-    fetchInjuries('DET'),
-    fetchInjuries(oppAbb)
+    fetchInjuries('Detroit Pistons'),
+    fetchInjuries(oppName)
   ]);
 
   // Injury section — styled like game notes
   const injurySection = (injuries, teamName, accentColor) => {
     if (!injuries.length) return `<div style="${F}font-size:12px;color:#bbb;padding:4px 0;">None reported</div>`;
     return injuries.map((inj, i) => {
-      const name   = inj.athlete?.displayName || '?';
-      const type   = inj.type?.description || inj.type?.text || 'Injury';
-      const comment = inj.shortComment || inj.longComment || '';
-      const status = parseInjuryStatus(comment || inj.status?.type?.description || '');
+      const name   = inj.name || '?';
+      const type   = inj.injType || 'Injury';
+      const status = inj.status || 'Out';
       const color  = injuryStatusColor(status);
       return `<div style="display:flex;gap:12px;align-items:baseline;margin-bottom:8px;">
         <span style="${F}font-size:12px;font-weight:900;color:${accentColor};min-width:18px;flex-shrink:0;">${i+1}</span>
