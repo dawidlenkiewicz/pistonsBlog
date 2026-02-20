@@ -729,27 +729,22 @@ async function loadSchedule() {
     const seasonYear = (() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })();
     const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${seasonYear}`;
 
-    // Try multiple CORS proxies in order
-    const proxies = [
-      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    ];
+    // Race all proxies simultaneously — use whichever responds first with valid data
+    const tryProxy = async (makeUrl) => {
+      const r = await fetch(makeUrl(espnUrl));
+      if (!r.ok) throw new Error('not ok');
+      const text = await r.text();
+      const parsed = JSON.parse(text);
+      const j = parsed.contents ? JSON.parse(parsed.contents) : parsed;
+      if (!j.events) throw new Error('no events');
+      return j;
+    };
 
-    let json = null;
-    for (const makeUrl of proxies) {
-      try {
-        const r = await fetch(makeUrl(espnUrl));
-        if (!r.ok) continue;
-        const text = await r.text();
-        // allorigins wraps in {contents:...}, others return raw JSON
-        const parsed = JSON.parse(text);
-        json = parsed.contents ? JSON.parse(parsed.contents) : parsed;
-        if (json.events) break; // success
-        json = null;
-      } catch { continue; }
-    }
-    if (!json) throw new Error('All proxies failed');
+    const json = await Promise.any([
+      tryProxy(url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`),
+      tryProxy(url => `https://corsproxy.io/?${encodeURIComponent(url)}`),
+      tryProxy(url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`),
+    ]).catch(() => { throw new Error('All proxies failed'); });
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
