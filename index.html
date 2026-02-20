@@ -983,6 +983,11 @@ function buildInjuryHTML(injuries, teamName, F, accentColor) {
   </div>`;
 }
 
+function ordinal(n) {
+  const s = ['th','st','nd','rd'], v = n % 100;
+  return (s[(v-20)%10] || s[v] || s[0]);
+}
+
 async function buildPreviewHTML() {
   const sel = document.getElementById('game-select');
   const idx = parseInt(sel.value);
@@ -1005,73 +1010,99 @@ async function buildPreviewHTML() {
   const st = comp.status?.type;
   const completed = st?.completed === true || st?.state === 'post';
 
-  // Records from schedule data
-  const detRecord = det?.records?.find(r => r.type === 'total')?.summary
-    || det?.record?.[0]?.displayValue || '';
-  const oppRecord = opp?.records?.find(r => r.type === 'total')?.summary
-    || opp?.record?.[0]?.displayValue || '';
+  // W-L record (total)
+  const detRecord = det?.record?.[0]?.displayValue || det?.records?.find(r=>r.type==='total')?.summary || '';
+  const oppRecord = opp?.record?.[0]?.displayValue || opp?.records?.find(r=>r.type==='total')?.summary || '';
 
-  // Standing — from record array: look for conference standing
-  const detConf = det?.records?.find(r => r.type === 'vsconf')?.summary || '';
-  const oppConf = opp?.records?.find(r => r.type === 'vsconf')?.summary || '';
+  // Conference standing — comes from linescores or we fetch standings
+  // For now use the record position text from competitor if available
+  const detStanding = det?.curatedRank?.current ? `${det.curatedRank.current}${ordinal(det.curatedRank.current)} in Conf` : '';
+  const oppStanding = opp?.curatedRank?.current ? `${opp.curatedRank.current}${ordinal(opp.curatedRank.current)} in Conf` : '';
 
-  // Logos
   const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
   const oppLogo = opp?.team?.logos?.[0]?.href || '';
-
   const detName = 'Detroit Pistons';
   const oppName = opp?.team?.displayName || '';
   const oppAbb  = opp?.team?.abbreviation || '';
+  const isHome  = det ? det.homeAway === 'home' : !event.name?.startsWith('Detroit');
 
-  // Score / time
-  const isHome = det ? det.homeAway === 'home' : !event.name?.startsWith('Detroit');
+  // Score block — no time for upcoming, just date
   let scoreBlock = '';
   if (completed) {
     const detScore = det?.score?.displayValue ?? det?.score ?? '?';
     const oppScore = opp?.score?.displayValue ?? opp?.score ?? '?';
     const detWon   = det?.winner;
-    scoreBlock = `<div style="${F}font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
-      <span style="color:${isHome ? RED : '#bbb'}">${isHome ? detScore : oppScore}</span>
-      <span style="color:#ddd;margin:0 6px;font-size:40px;">-</span>
-      <span style="color:${isHome ? '#bbb' : RED}">${isHome ? oppScore : detScore}</span>
-    </div>
-    <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${fmtDate(event.date)}</div>
-    <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${detWon ? '🏆 Pistons Win' : '❌ Pistons Loss'}</div>`;
+    const leftScore  = isHome ? detScore : oppScore;
+    const rightScore = isHome ? oppScore : detScore;
+    scoreBlock = `
+      <div style="${F}font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
+        <span style="color:${RED}">${leftScore}</span>
+        <span style="color:#ddd;margin:0 8px;font-size:36px;">–</span>
+        <span style="color:#bbb">${rightScore}</span>
+      </div>
+      <div style="${F}font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin:8px 0 10px;">${fmtDate(event.date)}</div>
+      <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 18px;text-transform:uppercase;">${detWon?'🏆 Pistons Win':'❌ Pistons Loss'}</div>`;
   } else {
-    const gameTime = new Date(event.date).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
-    scoreBlock = `<div style="${F}font-size:18px;font-weight:700;color:#111;background:#f0f1f5;padding:10px 20px;border-radius:4px;">${gameTime}</div>
-    <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:8px 0;">${fmtDate(event.date)}</div>`;
+    scoreBlock = `
+      <div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div>`;
   }
 
-  const teamCell = (logo, name, record, homeAway) => `
-    <div style="text-align:center;min-width:110px;">
-      <img src="${logo}" width="80" height="80" style="display:block;object-fit:contain;margin:0 auto 8px;">
-      <div style="${F}font-size:14px;font-weight:800;color:#111;">${name.split(' ').pop()}</div>
-      <div style="${F}font-size:11px;color:#999;margin-top:2px;">${record}</div>
+  const teamCell = (logo, name, record, standing) => `
+    <div style="text-align:center;min-width:120px;">
+      <img src="${logo}" width="90" height="90" style="display:block;object-fit:contain;margin:0 auto 10px;">
+      <div style="${F}font-size:16px;font-weight:800;color:#111;margin-bottom:4px;">${name.split(' ').pop()}</div>
+      <div style="${F}font-size:12px;font-weight:700;color:#333;">${record}</div>
+      ${standing ? `<div style="${F}font-size:11px;color:#999;margin-top:2px;">${standing}</div>` : ''}
     </div>`;
 
-  const scoreboard = `<div style="${F}background:#fff;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};margin-bottom:0;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
-    ${isHome ? teamCell(detLogo, detName, detRecord, 'home') : teamCell(oppLogo, oppName, oppRecord, 'away')}
+  const scoreboard = `
+  <div style="${F}background:#fff;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+    ${isHome ? teamCell(detLogo, detName, detRecord, detStanding) : teamCell(oppLogo, oppName, oppRecord, oppStanding)}
     <div style="text-align:center;flex:1;">${scoreBlock}</div>
-    ${isHome ? teamCell(oppLogo, oppName, oppRecord, 'away') : teamCell(detLogo, detName, detRecord, 'home')}
+    ${isHome ? teamCell(oppLogo, oppName, oppRecord, oppStanding) : teamCell(detLogo, detName, detRecord, detStanding)}
   </div>`;
 
-  // Fetch injuries for both teams
-  document.getElementById('preview-render').innerHTML = scoreboard + '<div style="padding:20px;font-family:Arial,sans-serif;color:#999;font-size:13px;">Loading injuries…</div>';
+  // Show scoreboard immediately, then load injuries
+  document.getElementById('preview-render').innerHTML = scoreboard +
+    '<div style="padding:16px 20px;font-family:Arial,sans-serif;color:#aaa;font-size:12px;background:#fff;margin-top:10px;">⏳ Loading injury report…</div>';
 
   const [detInjuries, oppInjuries] = await Promise.all([
     fetchInjuries('DET'),
     fetchInjuries(oppAbb)
   ]);
 
-  const injBlock = (detInjuries.length || oppInjuries.length) ? `
-  <div style="${F}background:#fff;border:1px solid #e2e6ef;padding:16px 20px;margin-top:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
-    <div style="${F}font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:12px;">Injury Report</div>
-    <div style="display:flex;gap:32px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:200px;">${buildInjuryHTML(detInjuries, 'Detroit', F, RED)}</div>
-      <div style="flex:1;min-width:200px;">${buildInjuryHTML(oppInjuries, oppName, F, '#555')}</div>
+  // Injury section — styled like game notes
+  const injurySection = (injuries, teamName, accentColor) => {
+    if (!injuries.length) return `<div style="${F}font-size:12px;color:#bbb;padding:4px 0;">None reported</div>`;
+    return injuries.map((inj, i) => {
+      const name   = inj.athlete?.displayName || '?';
+      const type   = inj.type?.description || inj.type?.text || 'Injury';
+      const comment = inj.shortComment || inj.longComment || '';
+      const status = parseInjuryStatus(comment || inj.status?.type?.description || '');
+      const color  = injuryStatusColor(status);
+      return `<div style="display:flex;gap:12px;align-items:baseline;margin-bottom:8px;">
+        <span style="${F}font-size:12px;font-weight:900;color:${accentColor};min-width:18px;flex-shrink:0;">${i+1}</span>
+        <span style="${F}font-size:14px;color:#333;line-height:1.5;">${name} – ${type}
+          <span style="font-size:11px;font-weight:700;color:${color};margin-left:6px;">${status}</span>
+        </span>
+      </div>`;
+    }).join('');
+  };
+
+  const injBlock = `
+  <div style="${F}background:#fff;border:1px solid #e2e6ef;border-left:4px solid ${RED};padding:16px 20px;margin-top:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:14px;">Injury Report</div>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div style="${F}font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${RED};margin-bottom:10px;">Detroit Pistons</div>
+        ${injurySection(detInjuries, 'Detroit', RED)}
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="${F}font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:10px;">${oppName}</div>
+        ${injurySection(oppInjuries, oppName, '#555')}
+      </div>
     </div>
-  </div>` : '';
+  </div>`;
 
   return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
     ${scoreboard}
