@@ -718,10 +718,8 @@ async function loadSchedule() {
     );
     if (!res.ok) throw new Error('Schedule API error ' + res.status);
     const wrapper = await res.json();
-    console.log('allorigins status:', wrapper.status, 'contents length:', wrapper.contents?.length);
     if (!wrapper.contents) throw new Error('Proxy returned empty contents');
     const json = JSON.parse(wrapper.contents);
-    console.log('ESPN keys:', Object.keys(json));
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
@@ -818,11 +816,10 @@ async function fetchBoxScore(gameId, oppAbb) {
   setLoadingState('⏳ Loading stats…');
   try {
     const res = await fetch(
-      `https://api.allorigins.win/get?url=${encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`)}`
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`
     );
     if (!res.ok) throw new Error('Box score error ' + res.status);
-    const wrapper = await res.json();
-    const json = JSON.parse(wrapper.contents);
+    const json = await res.json();
 
     const boxscores = json.boxscore?.players || [];
 
