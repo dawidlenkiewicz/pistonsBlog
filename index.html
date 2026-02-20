@@ -954,9 +954,11 @@ async function fetchAllInjuries() {
       if (!r.ok) return;
       const json = await r.json();
       const athletes = json.athletes || [];
-      if (id === 25) console.log('OKC raw athletes[0]:', JSON.stringify(athletes[0]).slice(0,500));
-      if (id === 25) console.log('OKC raw athletes[1]:', JSON.stringify(athletes[1]).slice(0,500));
-      if (id === 25) console.log('OKC raw athletes[5]:', JSON.stringify(athletes[5]).slice(0,500));
+      if (id === 25) {
+        athletes.forEach(p => {
+          console.log('OKC', p.displayName, '| status:', JSON.stringify(p.status), '| injuries:', JSON.stringify(p.injuries));
+        });
+      }
       const injured = [];
       athletes.forEach(p => {
         // Check both injuries array and top-level status fields
@@ -1077,11 +1079,11 @@ async function buildPreviewHTML() {
   let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div>`;
 
   const teamCell = (logo, name, record, standing) => `
-    <div style="text-align:center;min-width:120px;">
-      <img src="${logo}" width="90" height="90" style="display:block;object-fit:contain;margin:0 auto 10px;">
-      <div style="${F}font-size:16px;font-weight:800;color:#111;margin-bottom:4px;">${name}</div>
-      <div style="${F}font-size:12px;font-weight:700;color:#333;">${record}</div>
-      ${standing ? `<div style="${F}font-size:11px;color:#999;margin-top:2px;">${standing}</div>` : ''}
+    <div style="text-align:center;min-width:90px;">
+      <img src="${logo}" width="56" height="56" style="display:block;object-fit:contain;margin:0 auto 6px;">
+      <div style="${F}font-size:13px;font-weight:800;color:#111;margin-bottom:2px;">${name}</div>
+      <div style="${F}font-size:11px;font-weight:700;color:#333;">${record}</div>
+      ${standing ? `<div style="${F}font-size:10px;color:#999;margin-top:1px;">${standing}</div>` : ''}
     </div>`;
 
   // Home team always on RIGHT, away on LEFT
@@ -1106,7 +1108,7 @@ async function buildPreviewHTML() {
   }
 
   const scoreboard = `
-  <div style="${F}background:#fff;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+  <div style="${F}background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};box-shadow:0 2px 8px rgba(0,0,0,0.07);">
     ${teamCell(awayTeam.logo, awayTeam.name, awayTeam.record, awayTeam.standing)}
     <div style="text-align:center;flex:1;">${scoreBlock}</div>
     ${teamCell(homeTeam.logo, homeTeam.name, homeTeam.record, homeTeam.standing)}
@@ -1126,13 +1128,12 @@ async function buildPreviewHTML() {
     if (!injuries.length) return `<div style="${F}font-size:12px;color:#bbb;padding:4px 0;">None reported</div>`;
     return injuries.map((inj, i) => {
       const name   = inj.name || '?';
-      const type   = inj.injType || 'Injury';
       const status = inj.status || 'Out';
       const color  = injuryStatusColor(status);
       return `<div style="display:flex;gap:12px;align-items:baseline;margin-bottom:8px;">
         <span style="${F}font-size:12px;font-weight:900;color:${accentColor};min-width:18px;flex-shrink:0;">${i+1}</span>
-        <span style="${F}font-size:14px;color:#333;line-height:1.5;">${name} – ${type}
-          <span style="font-size:11px;font-weight:700;color:${color};margin-left:6px;">${status}</span>
+        <span style="${F}font-size:14px;color:#333;line-height:1.5;">${name}
+          <span style="font-size:11px;font-weight:700;color:${color};margin-left:6px;">— ${status}</span>
         </span>
       </div>`;
     }).join('');
