@@ -1065,11 +1065,11 @@ async function buildPreviewHTML() {
   let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div>`;
 
   const teamCell = (logo, name, record, standing) => `
-    <div style="text-align:center;min-width:90px;">
-      <img src="${logo}" width="56" height="56" style="display:block;object-fit:contain;margin:0 auto 6px;">
-      <div style="${F}font-size:13px;font-weight:800;color:#111;margin-bottom:2px;">${name}</div>
-      <div style="${F}font-size:11px;font-weight:700;color:#333;">${record}</div>
-      ${standing ? `<div style="${F}font-size:10px;color:#999;margin-top:1px;">${standing}</div>` : ''}
+    <div style="text-align:center;min-width:100px;">
+      <img src="${logo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 8px;">
+      <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:3px;">${name}</div>
+      ${record ? `<div style="${F}font-size:11px;font-weight:600;color:#bbb;">${record}</div>` : ''}
+      ${standing ? `<div style="${F}font-size:10px;color:#ccc;margin-top:1px;">${standing}</div>` : ''}
     </div>`;
 
   // Home team always on RIGHT, away on LEFT
@@ -1119,7 +1119,7 @@ async function buildPreviewHTML() {
       return `<div style="display:flex;gap:12px;align-items:baseline;margin-bottom:8px;">
         <span style="${F}font-size:12px;font-weight:900;color:${accentColor};min-width:18px;flex-shrink:0;">${i+1}</span>
         <span style="${F}font-size:14px;color:#333;line-height:1.5;">${name}
-          <span style="font-size:11px;font-weight:700;color:${color};margin-left:6px;">— ${status}</span>
+          <span style="font-size:11px;font-weight:700;color:${color};margin-left:6px;">- ${status}</span>
         </span>
       </div>`;
     }).join('');
