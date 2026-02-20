@@ -936,8 +936,7 @@ let injuriesCache = null;
 
 async function fetchAllInjuries() {
   if (injuriesCache) return injuriesCache;
-  // sports.core.api.espn.com works cross-origin without proxy
-  // Fetch injuries for all 30 teams in parallel
+  // Use ESPN roster endpoint — includes injuryStatus on each athlete, no second fetch needed
   const TEAM_IDS = {
     'Atlanta Hawks':1,'Boston Celtics':2,'Charlotte Hornets':30,'Chicago Bulls':4,
     'Cleveland Cavaliers':5,'Dallas Mavericks':6,'Denver Nuggets':7,'Detroit Pistons':8,
@@ -951,35 +950,31 @@ async function fetchAllInjuries() {
   const result = {};
   await Promise.all(Object.entries(TEAM_IDS).map(async ([teamName, id]) => {
     try {
-      const r = await fetch(`https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/teams/${id}/injuries?limit=50`);
-      if (!r.ok) { if(id===8) console.warn('DET injuries HTTP',r.status); return; }
+      const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${id}/roster`);
+      if (!r.ok) return;
       const json = await r.json();
-      const items = json.items || [];
-      if (id === 8) console.log('DET injury items:', items.length, items[0]);
-      if (!items.length) return;
-      // items can be direct objects OR $ref URLs
-      const details = await Promise.all(items.map(async item => {
-        try {
-          // If item has athlete directly, use it; otherwise fetch $ref
-          if (item.athlete) return item;
-          if (!item.$ref) return null;
-          const refUrl = item.$ref.replace('http://', 'https://');
-          const dr = await fetch(refUrl);
-          if (!dr.ok) return null;
-          return await dr.json();
-        } catch { return null; }
-      }));
-      if (id === 8) console.log('DET injury details[0]:', JSON.stringify(details[0])?.slice(0,300));
-      const injuries = details.filter(Boolean).map(inj => {
-        // Handle both flat and nested structures
-        const athlete = inj.athlete || inj;
-        const name = athlete.displayName || inj.athlete?.fullName || '?';
-        const statusText = inj.status?.type?.description || inj.status?.description || inj.type?.description || 'Out';
-        const injType = inj.details?.detail || inj.injury?.description || inj.type?.text || 'Injury';
-        const comment = inj.longComment || inj.shortComment || '';
-        return { name, status: statusText, injType, comment };
-      }).filter(i => i.name !== '?');
-      if (injuries.length) result[teamName] = injuries;
+      const athletes = json.athletes || [];
+      const injured = [];
+      athletes.forEach(group => {
+        // roster groups: {items: [...]} or flat array
+        const players = group.items || (Array.isArray(group) ? group : [group]);
+        players.forEach(p => {
+          if (!p.injuries?.length) return;
+          p.injuries.forEach(inj => {
+            const status = inj.status || 'Out';
+            // Only show active injuries (not healthy)
+            if (status.toLowerCase() === 'active' || status.toLowerCase() === 'healthy') return;
+            const injType = inj.type || inj.longComment?.match(/\(([^)]+)\)/)?.[1] || 'Injury';
+            injured.push({
+              name: p.displayName || p.fullName || '?',
+              status,
+              injType,
+              comment: inj.longComment || ''
+            });
+          });
+        });
+      });
+      if (injured.length) result[teamName] = injured;
     } catch {}
   }));
   console.log('Injuries loaded for teams:', Object.keys(result));
