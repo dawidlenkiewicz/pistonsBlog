@@ -857,7 +857,8 @@ async function loadSelectedGame() {
   badge.style.background = detWon ? 'var(--red)' : '#555';
 
   // Load box score
-  await fetchBoxScore(comp.id, oppAbb);
+  console.log('fetchBoxScore gameId:', comp.id, 'event.id:', event.id);
+  await fetchBoxScore(comp.id || event.id, oppAbb);
 }
 
 async function fetchBoxScore(gameId, oppAbb) {
@@ -951,26 +952,32 @@ async function fetchAllInjuries() {
   await Promise.all(Object.entries(TEAM_IDS).map(async ([teamName, id]) => {
     try {
       const r = await fetch(`https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/teams/${id}/injuries?limit=50`);
-      if (!r.ok) return;
+      if (!r.ok) { if(id===8) console.warn('DET injuries HTTP',r.status); return; }
       const json = await r.json();
       const items = json.items || [];
+      if (id === 8) console.log('DET injury items:', items.length, items[0]);
       if (!items.length) return;
-      // Each item is a $ref URL — fetch them all in parallel
+      // items can be direct objects OR $ref URLs
       const details = await Promise.all(items.map(async item => {
         try {
+          // If item has athlete directly, use it; otherwise fetch $ref
+          if (item.athlete) return item;
+          if (!item.$ref) return null;
           const dr = await fetch(item.$ref);
           if (!dr.ok) return null;
           return await dr.json();
         } catch { return null; }
       }));
+      if (id === 8) console.log('DET injury details[0]:', JSON.stringify(details[0])?.slice(0,300));
       const injuries = details.filter(Boolean).map(inj => {
-        const name = inj.athlete?.displayName || '?';
-        const statusText = inj.status?.type?.description || inj.type?.description || 'Out';
-        // Injury type from details
-        const injType = inj.details?.detail || inj.type?.text || 'Injury';
+        // Handle both flat and nested structures
+        const athlete = inj.athlete || inj;
+        const name = athlete.displayName || inj.athlete?.fullName || '?';
+        const statusText = inj.status?.type?.description || inj.status?.description || inj.type?.description || 'Out';
+        const injType = inj.details?.detail || inj.injury?.description || inj.type?.text || 'Injury';
         const comment = inj.longComment || inj.shortComment || '';
         return { name, status: statusText, injType, comment };
-      });
+      }).filter(i => i.name !== '?');
       if (injuries.length) result[teamName] = injuries;
     } catch {}
   }));
@@ -1043,27 +1050,28 @@ async function buildPreviewHTML() {
   // Fetch standings from ESPN standings API (works cross-origin)
   let detStanding = '', oppStanding = '';
   try {
-    const [eastRes, westRes] = await Promise.all([
-      fetch('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026&group=conference&type=0'),
-      fetch('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026&group=conference&type=0'),
-    ]);
-    const standJson = eastRes.ok ? await eastRes.json() : null;
-    if (standJson) {
-      const entries = standJson.standings?.entries || standJson.children?.flatMap(c=>c.standings?.entries||[]) || [];
-      entries.forEach((entry, idx) => {
-        const abbr = entry.team?.abbreviation;
-        const seed = entry.stats?.find(s=>s.abbreviation==='seed'||s.name==='playoffSeed')?.value || (idx+1);
-        const conf = entry.team?.conferenceId;
-        const confName = conf === '3' ? 'East' : conf === '5' ? 'West' : '';
-        const label = confName ? `${Math.round(seed)}${ordinal(Math.round(seed))} ${confName}` : '';
-        if (abbr === 'DET') detStanding = label;
-        if (abbr === opp?.team?.abbreviation) oppStanding = label;
+    const standRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/standings');
+    if (standRes.ok) {
+      const standJson = await standRes.json();
+      // ESPN standings: groups = [East, West], each has standings.entries
+      const groups = standJson.groups || standJson.children || [];
+      groups.forEach(group => {
+        const confName = group.name?.includes('East') ? 'East' : group.name?.includes('West') ? 'West' : '';
+        const entries = group.standings?.entries || group.entries || [];
+        entries.forEach((entry, idx) => {
+          const abbr = entry.team?.abbreviation;
+          const seed = idx + 1;
+          const label = confName ? `${seed}${ordinal(seed)} ${confName}` : '';
+          if (abbr === 'DET') detStanding = label;
+          if (abbr === opp?.team?.abbreviation) oppStanding = label;
+        });
       });
     }
   } catch(e) { console.log('standings failed:', e); }
 
   const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
-  const oppLogo = opp?.team?.logos?.[0]?.href || '';
+  const oppLogo = opp?.team?.logos?.[0]?.href
+    || (opp?.team?.abbreviation ? `https://a.espncdn.com/i/teamlogos/nba/500/${opp.team.abbreviation.toLowerCase()}.png` : '');
   const detName = 'Detroit Pistons';
   const oppName = opp?.team?.displayName || '';
   const oppAbb  = opp?.team?.abbreviation || '';
