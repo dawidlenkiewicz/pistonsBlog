@@ -957,9 +957,9 @@ async function fetchAllInjuries() {
       const injured = [];
       // roster is a flat array of player objects
       athletes.forEach(p => {
-        if (id === 8) {
+        if (id === 8 || id === 25) {
           const keys = Object.keys(p).filter(k => ['injuries','status','injuryStatus','injury'].includes(k));
-          if (keys.length) console.log('DET injured player:', p.displayName, JSON.stringify(Object.fromEntries(keys.map(k=>[k,p[k]]))));
+          if (keys.length) console.log(id===8?'DET':'OKC','injured player:', p.displayName, JSON.stringify(Object.fromEntries(keys.map(k=>[k,p[k]]))));
         }
         // Check both injuries array and top-level status fields
         const injuryStatus = p.injuryStatus || p.status;
