@@ -164,6 +164,7 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
   <div class="app-header">
     <h1>⚙ Pistons Recap Builder</h1>
     <div class="header-actions">
+      <button class="btn-export" onclick="openPreviewGame()" style="background:#1a1e2d;border:1px solid #333;">Preview Game →</button>
       <button class="btn-export" onclick="openExport()">Export HTML →</button>
     </div>
   </div>
@@ -218,6 +219,18 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
 </div>
 
 <!-- EXPORT MODAL -->
+<div id="preview-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:100;overflow-y:auto;padding:24px;">
+  <div style="max-width:700px;margin:0 auto;">
+    <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;position:sticky;top:0;background:rgba(0,0,0,0.9);padding:12px 0;">
+      <button onclick="copyPreview()" style="background:#C8102E;color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Copy HTML</button>
+      <button onclick="document.getElementById('preview-modal').style.display='none'" style="background:#222;color:#aaa;border:1px solid #444;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Close</button>
+      <span id="preview-copy-msg" style="color:#4caf50;font-size:13px;display:none;">Copied!</span>
+    </div>
+    <textarea id="preview-html-output" style="width:100%;height:160px;font-family:monospace;font-size:11px;border:1px solid #333;padding:12px;background:#111;color:#ccc;resize:vertical;margin-bottom:16px;box-sizing:border-box;"></textarea>
+    <div style="background:#f0f1f6;padding:24px;" id="preview-render"></div>
+  </div>
+</div>
+
 <div id="export-modal">
   <div class="modal-actions">
     <button class="btn-copy-html" onclick="copyHTML()">Copy HTML</button>
@@ -725,10 +738,6 @@ async function loadSchedule() {
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
     const allEvents = json.events || json.games || [];
     scheduleGames = allEvents
-      .filter(e => {
-        const st = e.competitions?.[0]?.status?.type;
-        return st?.completed === true || st?.state === 'post';
-      })
       .sort((a,b) => new Date(b.date) - new Date(a.date));
 
     if (!scheduleGames.length) {
@@ -746,13 +755,21 @@ async function loadSchedule() {
       const opp = competitors.find(c => c.team?.abbreviation !== 'DET');
       if (!opp) return '';
       // If det not found, infer home/away from event name e.g. "Detroit Pistons at Toronto Raptors"
+      const st = e.competitions?.[0]?.status?.type;
+      const completed = st?.completed === true || st?.state === 'post';
       const isHome = det ? det.homeAway === 'home' : !e.name?.startsWith('Detroit');
-      const detScore = det?.score?.displayValue ?? det?.score ?? '?';
-      const oppScore = opp.score?.displayValue ?? opp.score ?? '?';
-      const won = det?.winner;
-      const result = won ? 'W' : 'L';
       const oppName = opp.team?.shortDisplayName || opp.team?.abbreviation || '???';
-      const label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  ${result} ${detScore}-${oppScore}`;
+      let label;
+      if (completed) {
+        const detScore = det?.score?.displayValue ?? det?.score ?? '?';
+        const oppScore = opp.score?.displayValue ?? opp.score ?? '?';
+        const won = det?.winner;
+        const result = won ? 'W' : 'L';
+        label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  ${result} ${detScore}-${oppScore}`;
+      } else {
+        const time = new Date(e.date).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
+        label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  — ${time}`;
+      }
       return `<option value="${i}">${label}</option>`;
     }).filter(Boolean).join('');
 
@@ -883,6 +900,187 @@ async function fetchBoxScore(gameId, oppAbb) {
     console.error('fetchBoxScore error:', e);
   }
 }
+
+// ESPN team abbreviation → sports.core team id (for injuries endpoint)
+const ABB_TO_CORE_ID = {
+  ATL:1,BOS:2,CLE:4,NOP:3,CHI:4,DAL:6,DEN:7,DET:8,GSW:9,HOU:10,
+  LAC:12,LAL:13,MEM:29,MIA:14,MIL:15,MIN:16,BKN:17,NYK:18,ORL:19,IND:11,
+  PHI:20,PHX:21,POR:22,SAC:23,SAS:24,OKC:25,TOR:28,UTA:26,WAS:27,CHA:30,
+  NY:18, SA:24, GS:9, NO:3
+};
+
+async function fetchInjuries(teamAbbr) {
+  const coreId = ABB_TO_CORE_ID[teamAbbr];
+  if (!coreId) return [];
+  try {
+    // sports.core API allows direct browser access (no proxy needed)
+    const res = await fetch(`https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/teams/${coreId}/injuries?limit=50`);
+    if (!res.ok) return [];
+    const json = await res.json();
+    const items = json.items || [];
+    // Each item is a reference URL, fetch each one
+    const details = await Promise.all(items.slice(0,15).map(async item => {
+      try {
+        const r = await fetch(item.$ref);
+        if (!r.ok) return null;
+        return await r.json();
+      } catch { return null; }
+    }));
+    return details.filter(Boolean);
+  } catch { return []; }
+}
+
+function parseInjuryStatus(comment) {
+  // Extract status from comment text
+  const c = (comment || '').toLowerCase();
+  if (c.includes('out for the season') || c.includes('miss the remainder')) return 'Out for Season';
+  if (c.includes('day-to-day') || c.includes('questionable')) return 'Questionable';
+  if (c.includes('probable')) return 'Probable';
+  if (c.includes('out')) return 'Out';
+  if (c.includes('doubtful')) return 'Doubtful';
+  return 'Out';
+}
+
+function injuryStatusColor(status) {
+  if (status === 'Questionable' || status === 'Probable') return '#f59e0b';
+  if (status === 'Out for Season') return '#888';
+  return '#ef4444'; // Out / Doubtful
+}
+
+function buildInjuryHTML(injuries, teamName, F, accentColor) {
+  if (!injuries.length) return '';
+  const rows = injuries.map(inj => {
+    const name = inj.athlete?.displayName || '?';
+    const type = inj.type?.description || inj.type?.text || 'Injury';
+    const comment = (inj.details?.returnDate ? '' : '') + (inj.shortComment || inj.longComment || '');
+    const status = parseInjuryStatus(comment || inj.status?.type?.description || '');
+    const color = injuryStatusColor(status);
+    return `<div style="${F}display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #f0f0f0;">
+      <span style="${F}font-size:13px;color:#333;">${name} <span style="color:#999;font-size:11px;">— ${type}</span></span>
+      <span style="${F}font-size:11px;font-weight:700;color:${color};white-space:nowrap;margin-left:8px;">${status}</span>
+    </div>`;
+  }).join('');
+  return `<div style="${F}margin-top:8px;">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${accentColor};margin-bottom:8px;">${teamName} Injuries</div>
+    ${rows}
+  </div>`;
+}
+
+async function buildPreviewHTML() {
+  const sel = document.getElementById('game-select');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx) || !scheduleGames[idx]) return '<p>No game selected</p>';
+
+  const event = scheduleGames[idx];
+  const comp  = event.competitions[0];
+  const competitors = comp.competitors || [];
+  let det = competitors.find(c => c.team?.abbreviation === 'DET');
+  let opp = competitors.find(c => c.team?.abbreviation !== 'DET');
+  if (!det && competitors.length === 2) {
+    const detIsFirst = event.name?.startsWith('Detroit');
+    det = detIsFirst ? competitors[0] : competitors[1];
+    opp = detIsFirst ? competitors[1] : competitors[0];
+  }
+  if (!opp) return '<p>Could not load game data</p>';
+
+  const F = 'font-family:Arial,sans-serif;';
+  const RED = '#C8102E';
+  const st = comp.status?.type;
+  const completed = st?.completed === true || st?.state === 'post';
+
+  // Records from schedule data
+  const detRecord = det?.records?.find(r => r.type === 'total')?.summary
+    || det?.record?.[0]?.displayValue || '';
+  const oppRecord = opp?.records?.find(r => r.type === 'total')?.summary
+    || opp?.record?.[0]?.displayValue || '';
+
+  // Standing — from record array: look for conference standing
+  const detConf = det?.records?.find(r => r.type === 'vsconf')?.summary || '';
+  const oppConf = opp?.records?.find(r => r.type === 'vsconf')?.summary || '';
+
+  // Logos
+  const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
+  const oppLogo = opp?.team?.logos?.[0]?.href || '';
+
+  const detName = 'Detroit Pistons';
+  const oppName = opp?.team?.displayName || '';
+  const oppAbb  = opp?.team?.abbreviation || '';
+
+  // Score / time
+  const isHome = det ? det.homeAway === 'home' : !event.name?.startsWith('Detroit');
+  let scoreBlock = '';
+  if (completed) {
+    const detScore = det?.score?.displayValue ?? det?.score ?? '?';
+    const oppScore = opp?.score?.displayValue ?? opp?.score ?? '?';
+    const detWon   = det?.winner;
+    scoreBlock = `<div style="${F}font-size:64px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
+      <span style="color:${isHome ? RED : '#bbb'}">${isHome ? detScore : oppScore}</span>
+      <span style="color:#ddd;margin:0 6px;font-size:40px;">-</span>
+      <span style="color:${isHome ? '#bbb' : RED}">${isHome ? oppScore : detScore}</span>
+    </div>
+    <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${fmtDate(event.date)}</div>
+    <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${detWon ? '🏆 Pistons Win' : '❌ Pistons Loss'}</div>`;
+  } else {
+    const gameTime = new Date(event.date).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
+    scoreBlock = `<div style="${F}font-size:18px;font-weight:700;color:#111;background:#f0f1f5;padding:10px 20px;border-radius:4px;">${gameTime}</div>
+    <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:8px 0;">${fmtDate(event.date)}</div>`;
+  }
+
+  const teamCell = (logo, name, record, homeAway) => `
+    <div style="text-align:center;min-width:110px;">
+      <img src="${logo}" width="80" height="80" style="display:block;object-fit:contain;margin:0 auto 8px;">
+      <div style="${F}font-size:14px;font-weight:800;color:#111;">${name.split(' ').pop()}</div>
+      <div style="${F}font-size:11px;color:#999;margin-top:2px;">${record}</div>
+    </div>`;
+
+  const scoreboard = `<div style="${F}background:#fff;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};margin-bottom:0;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+    ${isHome ? teamCell(detLogo, detName, detRecord, 'home') : teamCell(oppLogo, oppName, oppRecord, 'away')}
+    <div style="text-align:center;flex:1;">${scoreBlock}</div>
+    ${isHome ? teamCell(oppLogo, oppName, oppRecord, 'away') : teamCell(detLogo, detName, detRecord, 'home')}
+  </div>`;
+
+  // Fetch injuries for both teams
+  document.getElementById('preview-render').innerHTML = scoreboard + '<div style="padding:20px;font-family:Arial,sans-serif;color:#999;font-size:13px;">Loading injuries…</div>';
+
+  const [detInjuries, oppInjuries] = await Promise.all([
+    fetchInjuries('DET'),
+    fetchInjuries(oppAbb)
+  ]);
+
+  const injBlock = (detInjuries.length || oppInjuries.length) ? `
+  <div style="${F}background:#fff;border:1px solid #e2e6ef;padding:16px 20px;margin-top:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:12px;">Injury Report</div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">${buildInjuryHTML(detInjuries, 'Detroit', F, RED)}</div>
+      <div style="flex:1;min-width:200px;">${buildInjuryHTML(oppInjuries, oppName, F, '#555')}</div>
+    </div>
+  </div>` : '';
+
+  return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
+    ${scoreboard}
+    <div style="padding:0 0 16px;">${injBlock}</div>
+  </div>`;
+}
+
+async function openPreviewGame() {
+  const modal = document.getElementById('preview-modal');
+  modal.style.display = 'block';
+  document.getElementById('preview-html-output').value = '⏳ Loading…';
+  document.getElementById('preview-render').innerHTML = '<div style="padding:40px;text-align:center;font-family:Arial,sans-serif;color:#999;">⏳ Loading injuries…</div>';
+  const html = await buildPreviewHTML();
+  document.getElementById('preview-html-output').value = html;
+  document.getElementById('preview-render').innerHTML = html;
+}
+
+function copyPreview() {
+  const ta = document.getElementById('preview-html-output');
+  ta.select();
+  document.execCommand('copy');
+  const msg = document.getElementById('preview-copy-msg');
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2000);
+}
+
 
 loadSchedule();
 
