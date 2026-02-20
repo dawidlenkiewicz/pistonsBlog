@@ -726,13 +726,30 @@ async function loadSchedule() {
   const sel = document.getElementById('game-select');
   const btn = document.getElementById('btn-load-game');
   try {
-    const res = await fetch(
-      `https://api.allorigins.win/get?url=${encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${(() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })()}`)}`
-    );
-    if (!res.ok) throw new Error('Schedule API error ' + res.status);
-    const wrapper = await res.json();
-    if (!wrapper.contents) throw new Error('Proxy returned empty contents');
-    const json = JSON.parse(wrapper.contents);
+    const seasonYear = (() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })();
+    const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${seasonYear}`;
+
+    // Try multiple CORS proxies in order
+    const proxies = [
+      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    ];
+
+    let json = null;
+    for (const makeUrl of proxies) {
+      try {
+        const r = await fetch(makeUrl(espnUrl));
+        if (!r.ok) continue;
+        const text = await r.text();
+        // allorigins wraps in {contents:...}, others return raw JSON
+        const parsed = JSON.parse(text);
+        json = parsed.contents ? JSON.parse(parsed.contents) : parsed;
+        if (json.events) break; // success
+        json = null;
+      } catch { continue; }
+    }
+    if (!json) throw new Error('All proxies failed');
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
