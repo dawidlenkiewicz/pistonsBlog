@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pistons Recap Builder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
+
+:root {
+  --red: #C8102E; --blue: #006BB6; --dark: #0a0c12; --card: #12151f;
+  --border: #1e2435; --text: #e8edf5; --muted: #6b7590; --gold: #f5c518;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--dark); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; padding: 24px 16px; }
+.app-wrapper { max-width: 1200px; margin: 0 auto; }
+
+.app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.app-header h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+.header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.theme-label { display: none; }
+.theme-btns { display: none; }
+.btn-export { background: var(--red); color: #fff; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 10px 20px; cursor: pointer; transition: background 0.2s; }
+.btn-export:hover { background: #a50d24; }
+
+/* GAME SELECTOR */
+.game-selector-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.game-selector-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.game-select { background: var(--card); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; padding: 8px 12px; flex: 1; min-width: 220px; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7590' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.game-select:focus { outline: none; border-color: var(--red); }
+.game-select option { background: var(--card); color: var(--text); }
+.btn-load-game { background: var(--red); color: #fff; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 18px; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+.btn-load-game:hover { background: #a50d24; }
+.btn-load-game:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+/* SCOREBOARD */
+.scoreboard { background: #fff; color: #111; border: 1px solid #e0e0e0; padding: 24px 32px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+.team-side { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 110px; }
+.team-logo { width: 90px; height: 90px; object-fit: contain; }
+.team-name-sb { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #888; text-align: center; }
+.score-center { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.score-display { font-family: 'Barlow Condensed', sans-serif; font-size: 76px; font-weight: 900; letter-spacing: -3px; line-height: 1; color: #111; }
+.score-nyk-val { color: #999; }
+.score-det-val { color: var(--red); }
+.score-sep { color: #ccc; margin: 0 4px; }
+.game-meta-sb { font-size: 11px; color: #888; letter-spacing: 1.5px; text-transform: uppercase; }
+.win-badge { background: var(--red); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 2px; padding: 3px 14px; text-transform: uppercase; }
+
+.section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); padding-bottom: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+
+/* GAME NOTES */
+.game-notes-section { background: var(--card); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 20px; }
+.notes-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.note-item { display: flex; align-items: flex-start; gap: 10px; }
+.note-bullet { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 800; color: var(--red); margin-top: 9px; flex-shrink: 0; width: 14px; }
+.note-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; padding: 8px 4px; outline: none; transition: border-color 0.2s; }
+.note-input:focus { border-color: var(--red); }
+.note-input::placeholder { color: var(--muted); }
+.btn-add-note { background: none; border: 1px dashed var(--border); color: var(--muted); font-family: 'Barlow', sans-serif; font-size: 13px; padding: 8px 16px; cursor: pointer; width: 100%; margin-top: 10px; transition: all 0.2s; }
+.btn-add-note:hover { border-color: var(--red); color: var(--text); }
+.btn-remove-note { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; margin-top: 6px; line-height: 1; transition: color 0.2s; }
+.btn-remove-note:hover { color: var(--red); }
+
+/* SHARED PLAYER ELEMENTS */
+.players-section { background: var(--card); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 20px; }
+.player-row { border-bottom: 1px solid var(--border); padding: 16px 0; transition: opacity 0.3s, background 0.15s; }
+.player-row.hidden-player { opacity: 0.3; }
+.player-row:last-child { border-bottom: none; }
+.player-row.drag-over { background: rgba(200,16,46,0.08); border-top: 2px solid var(--red); margin-top: -2px; }
+.player-row.dragging { opacity: 0.35; cursor: grabbing; }
+.drag-handle {
+  cursor: grab; flex-shrink: 0; color: var(--muted);
+  font-size: 18px; line-height: 1; padding: 2px 4px 2px 0;
+  user-select: none; display: flex; align-items: center;
+  transition: color 0.2s; letter-spacing: -1px;
+}
+.drag-handle:hover { color: var(--text); }
+.drag-handle:active { cursor: grabbing; }
+.player-photo { width: 58px; height: 58px; object-fit: cover; object-position: top center; background: #1a1e2d; flex-shrink: 0; border: 2px solid var(--border); display: block; }
+.player-notes-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: 'Barlow', sans-serif; font-size: 13px; padding: 7px 4px; outline: none; resize: none; min-height: 36px; transition: border-color 0.2s; font-style: normal; }
+.player-notes-input:focus { border-color: var(--red); }
+.player-notes-input::placeholder { color: var(--muted); }
+.grade-selector { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+.grade-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+.grade-display { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900; color: var(--gold); line-height: 1; min-width: 50px; text-align: center; }
+.grade-input { background: transparent; border: 1px solid var(--border); color: var(--text); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-align: center; width: 50px; padding: 3px; outline: none; transition: border-color 0.2s; }
+.grade-input:focus { border-color: var(--gold); }
+.btn-toggle { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-family: 'Barlow', sans-serif; font-weight: 600; padding: 4px 10px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+.btn-toggle:hover { border-color: var(--red); color: var(--red); }
+.btn-toggle.re-add { border-color: var(--blue); color: var(--blue); }
+
+/* ━━━ THEME A: DARK STRIP ━━━ */
+.theme-a .player-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.theme-a .player-name { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 700; flex: 1; }
+.theme-a .player-pos { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); background: #1a1e2d; padding: 2px 8px; }
+.theme-a .stat-line { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.theme-a .stat-chip { background: #1a1e2d; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 600; padding: 4px 9px; color: var(--text); }
+.theme-a .stat-chip.hi { background: rgba(200,16,46,0.15); color: var(--red); }
+.theme-a .player-bottom { display: flex; gap: 12px; align-items: flex-start; }
+.theme-a .player-header-right { display: flex; gap: 8px; align-items: center; }
+
+/* ━━━ THEME B: LIGHT CARDS ━━━ */
+.theme-b .players-section { background: #f0f1f6; border-color: #dce0ea; }
+.theme-b .section-title { color: #666; border-color: #dce0ea; }
+.theme-b .player-row { background: #fff; border: 1px solid #e2e6ef; margin-bottom: 10px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); border-bottom: 1px solid #e2e6ef !important; }
+.theme-b .player-row.drag-over { background: #fff5f6; border-color: var(--red) !important; }
+.theme-b .player-row:last-child { margin-bottom: 0; }
+.theme-b .player-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.theme-b .player-name { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 800; color: #111; flex: 1; }
+.theme-b .player-pos { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #fff; background: var(--red); padding: 2px 8px; }
+.theme-b .stat-line { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.theme-b .stat-chip { background: #f0f1f5; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; padding: 4px 10px; color: #444; }
+.theme-b .stat-chip.hi { background: #ffe8eb; color: var(--red); }
+.theme-b .player-bottom { display: flex; gap: 12px; align-items: flex-start; }
+.theme-b .player-notes-input { color: #333; border-bottom-color: #ccc; }
+.theme-b .player-notes-input::placeholder { color: #bbb; }
+.theme-b .grade-display { color: var(--red); }
+.theme-b .grade-input { color: #111; border-color: #ccc; }
+.theme-b .grade-label { color: #888; }
+.theme-b .player-photo { border-color: #dce0ea; }
+.theme-b .btn-toggle { color: #999; border-color: #ddd; }
+.theme-b .player-header-right { display: flex; gap: 8px; align-items: center; }
+
+/* ━━━ THEME C: GRID/TABLE ━━━ */
+.theme-c .players-section { background: var(--card); border: 1px solid var(--border); padding: 0; overflow: hidden; }
+.theme-c .section-title { margin: 20px 20px 0; padding-bottom: 10px; }
+.theme-c .player-row { display: grid; grid-template-columns: 64px 1fr; border-bottom: 1px solid var(--border); padding: 0; }
+.theme-c .player-row:last-child { border-bottom: none; }
+.theme-c .player-photo-col { border-right: 1px solid var(--border); }
+.theme-c .player-photo { width: 64px; height: 100%; min-height: 80px; object-fit: cover; object-position: top; border: none; }
+.theme-c .player-inner { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.theme-c .player-top-row { display: flex; align-items: center; gap: 8px; }
+.theme-c .player-name { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 800; flex: 1; }
+.theme-c .player-pos { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.theme-c .stat-row { display: flex; flex-wrap: nowrap; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.theme-c .stat-chip { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 600; padding: 4px 8px; color: var(--muted); border-right: 1px solid var(--border); white-space: nowrap; }
+.theme-c .stat-chip:last-child { border-right: none; }
+.theme-c .stat-chip.hi { color: var(--text); }
+.theme-c .stat-chip.hi-red { color: var(--red); font-weight: 900; font-size: 13px; }
+.theme-c .player-bottom-row { display: flex; gap: 10px; align-items: flex-start; }
+.theme-c .grade-display { font-size: 26px; min-width: 44px; }
+.theme-c .grade-input { width: 44px; }
+
+.stat-editor { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 0 4px; border-top: 1px solid var(--border); }
+.stat-edit-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.stat-edit-label { font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.stat-edit-input { width: 46px; background: var(--dark); border: 1px solid var(--border); color: var(--text); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-align: center; padding: 3px 4px; }
+.stat-edit-input:focus { outline: none; border-color: var(--red); }
+.stat-edit-hint { font-size: 10px; color: var(--muted); padding: 4px 0 2px; font-style: italic; }
+#export-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; overflow-y: auto; padding: 24px; }
+.modal-actions { display: flex; gap: 12px; margin-bottom: 12px; position: sticky; top: 0; background: rgba(0,0,0,0.9); padding: 12px 0; align-items: center; flex-wrap: wrap; }
+.btn-copy-html, .btn-close-modal { padding: 10px 20px; font-weight: 700; cursor: pointer; border: none; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+.btn-copy-html { background: var(--red); color: #fff; }
+.btn-close-modal { background: #333; color: #fff; }
+.modal-hint { color: #666; font-size: 12px; }
+textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-size: 12px; border: 1px solid #333; padding: 12px; margin-bottom: 12px; background: #111; color: #ccc; resize: vertical; }
+.preview-label { font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.modal-preview-wrap { background: #f0f1f6; padding: 24px; }
+</style>
+</head>
+<body>
+<div class="app-wrapper">
+
+  <div class="app-header">
+    <h1>⚙ Pistons Recap Builder</h1>
+    <div class="header-actions">
+      <button class="btn-export" onclick="openExport()">Export HTML →</button>
+    </div>
+  </div>
+
+  <!-- GAME SELECTOR -->
+  <div class="game-selector-bar">
+    <span class="game-selector-label">Game</span>
+    <select class="game-select" id="game-select">
+      <option value="">⏳ Loading schedule…</option>
+    </select>
+    <button class="btn-load-game" id="btn-load-game" onclick="loadSelectedGame()" disabled>Load Game</button>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard">
+    <div class="team-side" id="sb-away-side">
+      <img class="team-logo" id="sb-away-logo" src="https://cdn.nba.com/logos/nba/1610612752/primary/L/logo.svg" alt="away">
+      <div class="team-name-sb" id="sb-away-name">New York Knicks</div>
+    </div>
+    <div class="score-center">
+      <div class="score-display">
+        <span class="score-nyk-val" id="sb-away-score">111</span><span class="score-sep">:</span><span class="score-det-val" id="sb-det-score">126</span>
+      </div>
+      <div class="game-meta-sb" id="sb-meta">Feb 20, 2026 · Madison Square Garden</div>
+      <div class="win-badge" id="sb-badge">🏆 Pistons Win</div>
+    </div>
+    <div class="team-side">
+      <img class="team-logo" src="https://cdn.nba.com/logos/nba/1610612765/primary/L/logo.svg" alt="DET">
+      <div class="team-name-sb">Detroit Pistons</div>
+    </div>
+  </div>
+
+  <!-- GAME NOTES -->
+  <div class="game-notes-section">
+    <div class="section-title">📋 Game Notes</div>
+    <ul class="notes-list" id="notes-list">
+      <li class="note-item">
+        <span class="note-bullet">▸</span>
+        <input type="text" class="note-input" placeholder="Add a game note...">
+        <button class="btn-remove-note" onclick="removeNote(this)">×</button>
+      </li>
+    </ul>
+    <button class="btn-add-note" onclick="addNote()">+ Add note</button>
+  </div>
+
+  <!-- PLAYERS -->
+  <div class="players-section theme-c" id="players-section">
+    <div class="section-title">👟 Player Ratings</div>
+    <div id="players-container"></div>
+  </div>
+
+</div>
+
+<!-- EXPORT MODAL -->
+<div id="export-modal">
+  <div class="modal-actions">
+    <button class="btn-copy-html" onclick="copyHTML()">Copy HTML</button>
+    <button class="btn-close-modal" onclick="closeExport()">Close</button>
+    <span class="modal-hint">Paste into WordPress → Add Block → Custom HTML</span>
+  </div>
+  <textarea id="html-output" readonly></textarea>
+  <div class="preview-label">Preview:</div>
+  <div class="modal-preview-wrap"><div id="preview-html"></div></div>
+</div>
+
+<script>
+const teamLogos = {
+  NYK:'https://cdn.nba.com/logos/nba/1610612752/primary/L/logo.svg',
+  DET:'https://cdn.nba.com/logos/nba/1610612765/primary/L/logo.svg'
+};
+
+// Full Pistons roster — ESPN IDs verified from espn.com/nba/team/roster
+const players = [
+  {name:"Cade Cunningham",  pos:"G", espnId:4432166, nbaId:1630595},
+  {name:"Jalen Duren",       pos:"C", espnId:4433621, nbaId:1628385},
+  {name:"Javonte Green",     pos:"G", espnId:2596112, nbaId:1629750},
+  {name:"Tobias Harris",     pos:"F", espnId:6440,    nbaId:202699},
+  {name:"Ronald Holland II", pos:"F", espnId:4683771, nbaId:1641842},
+  {name:"Kevin Huerter",     pos:"G", espnId:4066372, nbaId:1629631},
+  {name:"Daniss Jenkins",    pos:"G", espnId:5107199, nbaId:1642450},
+  {name:"Isaac Jones",       pos:"F", espnId:5107818, nbaId:1642380},
+  {name:"Bobi Klintman",     pos:"F", espnId:4906923, nbaId:1641938},
+  {name:"Chaz Lanier",       pos:"G", espnId:4700852, nbaId:1643078},
+  {name:"Caris LeVert",      pos:"G", espnId:2991043, nbaId:1628384},
+  {name:"Wendell Moore Jr.", pos:"F", espnId:4592187, nbaId:1630543},
+  {name:"Paul Reed",         pos:"F", espnId:4278562, nbaId:1629684},
+  {name:"Duncan Robinson",   pos:"F", espnId:3157465, nbaId:1629130},
+  {name:"Dario Saric",       pos:"F", espnId:3032978, nbaId:203967},
+  {name:"Marcus Sasser",     pos:"G", espnId:4432107, nbaId:1641743},
+  {name:"Tolu Smith",        pos:"F", espnId:4397882, nbaId:1642449},
+  {name:"Isaiah Stewart",    pos:"F", espnId:4432810, nbaId:1630191},
+  {name:"Ausar Thompson",    pos:"F", espnId:4684742, nbaId:1641709},
+];
+
+// Stats for this game (NYK @ DET, Feb 20 2026). null = didn't play.
+const GAME_STATS = {
+  4432166: {PTS:42,REB:8, AST:13,STL:1,BLK:2,TO:5, FG:"17-34","3P":"5-11",FT:"3-3"},
+  4433621: null,
+  2596112: {PTS:9, REB:5, AST:0, STL:2,BLK:0,TO:2, FG:"2-4",  "3P":"1-3", FT:"4-5"},
+  6440:    null,
+  4683771: {PTS:7, REB:2, AST:1, STL:0,BLK:0,TO:0, FG:"3-3",  "3P":"1-1", FT:"0-0"},
+  4066372: null,
+  5107199: {PTS:8, REB:2, AST:2, STL:0,BLK:0,TO:3, FG:"3-4",  "3P":"0-0", FT:"2-2"},
+  5107818: null,
+  4906923: null,
+  4700852: null,
+  2991043: {PTS:8, REB:2, AST:3, STL:1,BLK:2,TO:1, FG:"3-6",  "3P":"2-3", FT:"0-0"},
+  4592187: null,
+  4278562: {PTS:18,REB:7, AST:2, STL:1,BLK:3,TO:0, FG:"7-9",  "3P":"0-1", FT:"4-4"},
+  3157465: null,
+  3032978: null,
+  4432107: null,
+  4397882: {PTS:4, REB:2, AST:0, STL:0,BLK:0,TO:0, FG:"2-3",  "3P":"0-0", FT:"0-0"},
+  4432810: null,
+  4684742: {PTS:10,REB:5, AST:4, STL:3,BLK:0,TO:1, FG:"4-8",  "3P":"0-0", FT:"2-2"},
+};
+
+const BLANK = {PTS:"—",REB:"—",AST:"—",STL:"—",BLK:"—",TO:"—",FG:"—","3P":"—",FT:"—",MIN:"—"};
+// Holds manually entered stats for players whose GAME_STATS is null
+const statOverrides = {};
+
+function getStats(p) {
+  if (statOverrides[p.espnId]) return {...BLANK, ...statOverrides[p.espnId]};
+  return GAME_STATS[p.espnId] || BLANK;
+}
+
+function updateStat(espnId, key, val) {
+  if (!statOverrides[espnId]) statOverrides[espnId] = {};
+  statOverrides[espnId][key] = val.trim() || '—';
+}
+
+const playerState = players.map(p => ({
+  grade: "",
+  notes: "",
+  included: GAME_STATS[p.espnId] !== null,
+}));
+
+let currentTheme = 'c';
+
+function photoUrl(espnId) {
+  return `https://a.espncdn.com/i/headshots/nba/players/full/${espnId}.png`;
+}
+
+function getCachedPhoto(espnId) {
+  // Always use direct ESPN URL — works fine in <img> tags including WordPress.
+  // Canvas/base64 encoding is blocked by ESPN's CORS policy so we don't attempt it.
+  return photoUrl(espnId);
+}
+
+function makeInitialsDataUrl(name) {
+  const c = document.createElement('canvas');
+  c.width = 130; c.height = 100;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#1a1e2d'; ctx.fillRect(0,0,130,100);
+  ctx.fillStyle = '#6b7590'; ctx.font = 'bold 40px sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(name[0], 65, 50);
+  return c.toDataURL();
+}
+
+function makePlayerImg(p, cls) {
+  const img = document.createElement('img');
+  img.className = cls;
+  img.alt = p.name;
+  img.setAttribute('data-espn-id', p.espnId);
+  img.src = photoUrl(p.espnId);
+  let tried = 0;
+  img.onerror = function() {
+    tried++;
+    if (tried === 1) {
+      img.src = `https://cdn.nba.com/headshots/nba/latest/260x190/${p.nbaId}.png`;
+    } else {
+      img.src = makeInitialsDataUrl(p.name);
+      img.onerror = null;
+    }
+  };
+  return img;
+}
+
+function setTheme(t, btn) {
+  currentTheme = t;
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const container = document.getElementById('players-container');
+  const section = document.getElementById('players-section');
+  section.className = `players-section theme-${currentTheme}`;
+  container.innerHTML = '';
+  if (currentTheme === 'c') renderThemeC(container);
+  else players.forEach((p,i) => renderAB(p,i,container));
+  initDragDrop(container);
+}
+
+function renderAB(p, i, container) {
+  const s = playerState[i];
+  const stats = getStats(p);
+  const hi = ['PTS','AST','REB'];
+  const chips = Object.entries(stats).map(([k,v]) =>
+    `<span class="stat-chip${hi.includes(k)?' hi':''}">${k}: ${v}</span>`).join('');
+  const didPlay = GAME_STATS[p.espnId] !== null;
+  const dnpBadge = didPlay ? '' : `<span style="font-size:10px;color:var(--muted);letter-spacing:1px;margin-left:4px;">DNP</span>`;
+
+  const row = document.createElement('div');
+  row.className = `player-row theme-${currentTheme}${s.included?'':' hidden-player'}`;
+  row.id = `player-row-${i}`;
+  row.innerHTML = `
+    <div class="player-header">
+      <div class="drag-handle" title="Drag to reorder">⠿</div>
+      <div class="player-photo-slot"></div>
+      <div class="player-name">${p.name}${dnpBadge}</div>
+      <div class="player-pos">${p.pos}</div>
+      <div class="player-header-right">
+        <button class="btn-toggle${s.included?'':' re-add'}" onclick="togglePlayer(${i})">${s.included?'Remove':'Add'}</button>
+      </div>
+    </div>
+    <div class="stat-line">${chips}</div>
+    <div class="player-bottom">
+      <textarea class="player-notes-input" rows="2" placeholder="Notes on ${p.name.split(' ')[0]}..." oninput="playerState[${i}].notes=this.value">${s.notes}</textarea>
+      <div class="grade-selector">
+        <div class="grade-label">Grade</div>
+        <div class="grade-display" id="gd-${i}">${s.grade||'—'}</div>
+        <input type="text" class="grade-input" maxlength="3" placeholder="A+" value="${s.grade}"
+          oninput="playerState[${i}].grade=this.value;document.getElementById('gd-${i}').textContent=this.value||'—'">
+      </div>
+    </div>`;
+  row.querySelector('.player-photo-slot').replaceWith(makePlayerImg(p, 'player-photo'));
+  container.appendChild(row);
+}
+
+function renderThemeC(container) {
+  const STAT_KEYS = ['PTS','REB','AST','STL','BLK','TO','FG','3P','FT','MIN'];
+  players.forEach((p,i) => {
+    const s = playerState[i];
+    const hasRealStats = GAME_STATS[p.espnId] !== null;
+    const stats = getStats(p);
+    const chips = Object.entries(stats).map(([k,v]) => {
+      let cls = 'stat-chip';
+      if (k==='PTS') cls += ' hi-red';
+      else if (['AST','REB'].includes(k)) cls += ' hi';
+      return `<span class="${cls}">${k}&nbsp;${v}</span>`;
+    }).join('');
+
+    // Editable stat inputs for players without fetched data
+    const editInputs = !hasRealStats ? `
+      <div class="stat-editor">
+        <div class="stat-edit-hint">✏ Enter stats manually:</div>
+        ${STAT_KEYS.map(k => {
+          const cur = statOverrides[p.espnId]?.[k] || '';
+          return `<div class="stat-edit-cell">
+            <div class="stat-edit-label">${k}</div>
+            <input class="stat-edit-input" type="text" maxlength="6" placeholder="—"
+              value="${cur}"
+              oninput="updateStat(${p.espnId},'${k}',this.value);document.getElementById('chips-${i}').innerHTML=buildChips(${i})">
+          </div>`;
+        }).join('')}
+      </div>` : '';
+
+    const row = document.createElement('div');
+    row.className = `player-row theme-c${s.included?'':' hidden-player'}`;
+    row.id = `player-row-${i}`;
+    row.innerHTML = `
+      <div class="player-photo-col"><div class="player-photo-slot"></div></div>
+      <div class="player-inner">
+        <div class="player-top-row">
+          <div class="drag-handle" title="Drag to reorder">⠿</div>
+          <div class="player-name">${p.name}</div>
+          <div class="player-pos">${p.pos}</div>
+          <button class="btn-toggle${s.included?'':' re-add'}" onclick="togglePlayer(${i})">${s.included?'Remove':'Add'}</button>
+        </div>
+        <div class="stat-row" id="chips-${i}">${chips}</div>
+        ${editInputs}
+        <div class="player-bottom-row">
+          <textarea class="player-notes-input" rows="2" placeholder="Notes on ${p.name.split(' ')[0]}..." oninput="playerState[${i}].notes=this.value">${s.notes}</textarea>
+          <div class="grade-selector">
+            <div class="grade-label">Grade</div>
+            <div class="grade-display" id="gd-${i}">${s.grade||'—'}</div>
+            <input type="text" class="grade-input" maxlength="3" placeholder="A+" value="${s.grade}"
+              oninput="playerState[${i}].grade=this.value;document.getElementById('gd-${i}').textContent=this.value||'—'">
+          </div>
+        </div>
+      </div>`;
+    row.querySelector('.player-photo-slot').replaceWith(makePlayerImg(p, 'player-photo'));
+    container.appendChild(row);
+  });
+}
+
+function buildChips(i) {
+  const p = players[i];
+  const stats = getStats(p);
+  return Object.entries(stats).map(([k,v]) => {
+    let cls = 'stat-chip';
+    if (k==='PTS') cls += ' hi-red';
+    else if (['AST','REB'].includes(k)) cls += ' hi';
+    return `<span class="${cls}">${k}&nbsp;${v}</span>`;
+  }).join('');
+}
+
+function togglePlayer(i) {
+  playerState[i].included = !playerState[i].included;
+  renderPlayers();
+}
+
+function addNote() {
+  const list = document.getElementById('notes-list');
+  const li = document.createElement('li');
+  li.className = 'note-item';
+  li.innerHTML = `<span class="note-bullet">▸</span><input type="text" class="note-input" placeholder="Add a game note..."><button class="btn-remove-note" onclick="removeNote(this)">×</button>`;
+  list.appendChild(li);
+}
+function removeNote(btn) {
+  const list = document.getElementById('notes-list');
+  if (list.children.length > 1) btn.closest('.note-item').remove();
+  else btn.closest('.note-item').querySelector('input').value = '';
+}
+
+function gatherNotes() {
+  return Array.from(document.querySelectorAll('.note-input')).map(i=>i.value.trim()).filter(Boolean);
+}
+
+function buildExportHTML() {
+  const notes = gatherNotes();
+  const F = 'font-family:Arial,sans-serif;';
+  const RED = '#C8102E';
+
+  const notesBlock = notes.length ? `
+<div style="${F}background:#fff;border:1px solid #e2e6ef;border-left:4px solid ${RED};padding:16px 20px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+  <div style="font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#999;margin-bottom:12px;">Game Notes</div>
+  ${notes.map((n,idx)=>`
+  <div style="display:flex;gap:12px;align-items:baseline;margin-bottom:8px;">
+    <span style="${F}font-size:12px;font-weight:900;color:${RED};min-width:18px;flex-shrink:0;">${idx+1}</span>
+    <span style="${F}font-size:14px;color:#333;line-height:1.6;">${n}</span>
+  </div>`).join('')}
+</div>` : '';
+
+  const BIG = ['PTS','AST','REB'];
+
+  const cards = players.filter((_,i) => playerState[i].included).map(p => {
+    const idx = players.indexOf(p);
+    const s = playerState[idx];
+    const stats = getStats(p);
+
+    const chips = Object.entries(stats).map(([k,v]) => {
+      const big = BIG.includes(k);
+      return `<span style="${F}display:inline-block;background:${big?'#ffe8eb':'#f0f1f5'};color:${big?RED:'#444'};font-size:12px;font-weight:700;padding:4px 8px;white-space:nowrap;">${k}&nbsp;${v}</span>`;
+    }).join('');
+    const chipsDiv = `<div style="display:flex;flex-wrap:nowrap;gap:4px;overflow:hidden;">${chips}</div>`;
+
+    const gradeCell = s.grade
+      ? `<td style="padding:16px 20px;vertical-align:middle;text-align:center;border-left:1px solid #eee;white-space:nowrap;min-width:80px;">
+           <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#bbb;margin-bottom:6px;">Grade</div>
+           <div style="${F}font-size:40px;font-weight:900;color:${RED};line-height:1;">${s.grade}</div>
+         </td>`
+      : `<td style="width:0;padding:0;"></td>`;
+
+    const notesHtml = s.notes
+      ? `<div style="${F}font-size:13px;color:#666;margin-top:10px;padding-top:10px;border-top:1px solid #eee;line-height:1.6;">${s.notes}</div>`
+      : '';
+
+    const imgSrc = getCachedPhoto(p.espnId) || `https://a.espncdn.com/i/headshots/nba/players/full/${p.espnId}.png`;
+    const imgTag = `<img src="${imgSrc}"
+      width="72" height="90"
+      style="display:block;width:72px;height:90px;object-fit:cover;object-position:top center;">`;
+
+    return `
+<table style="${F}width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e6ef;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
+<tr>
+  <td style="padding:0;width:72px;vertical-align:top;border-right:1px solid #eee;">${imgTag}</td>
+  <td style="${F}padding:13px 15px;vertical-align:top;">
+    <div style="margin-bottom:8px;">
+      <span style="font-size:18px;font-weight:800;color:#111;">${p.name}</span>
+    </div>
+    ${chipsDiv}
+    ${notesHtml}
+  </td>
+  ${gradeCell}
+</tr>
+</table>`;
+  }).join('');
+
+  return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
+
+<!-- SCOREBOARD -->
+${(()=>{
+  const awayScore = document.getElementById('sb-away-score').textContent;
+  const detScore  = document.getElementById('sb-det-score').textContent;
+  const awayName  = document.getElementById('sb-away-name').textContent;
+  const awayLogo  = document.getElementById('sb-away-logo').src;
+  const sbMeta    = document.getElementById('sb-meta').textContent;
+  const badge     = document.getElementById('sb-badge').textContent;
+  const detWon    = parseInt(detScore) > parseInt(awayScore);
+  return `<div style="${F}background:#fff;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+  <div style="text-align:center;min-width:100px;">
+    <img src="${awayLogo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${awayName}</div>
+  </div>
+  <div style="text-align:center;flex:1;">
+    <div style="${F}font-size:68px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
+      <span style="color:#bbb;">${awayScore}</span><span style="color:#ddd;margin:0 6px;">:</span><span style="color:${RED};">${detScore}</span>
+    </div>
+    <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${sbMeta}</div>
+    <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
+  </div>
+  <div style="text-align:center;min-width:100px;">
+    <img src="${teamLogos.DET}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
+    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">Detroit Pistons</div>
+  </div>
+</div>`;
+})()}
+
+<div style="padding:0 0 16px;">
+
+${notesBlock}
+
+<!-- SECTION HEADER -->
+<div style="${F}font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#999;padding:4px 2px 10px;">Player Ratings</div>
+
+<!-- PLAYER CARDS -->
+${cards}
+
+</div>
+</div>`;
+}
+
+async function openExport() {
+  const modal = document.getElementById('export-modal');
+  modal.style.display = 'block';
+  const html = buildExportHTML();
+  document.getElementById('html-output').value = html;
+  document.getElementById('preview-html').innerHTML = html;
+}
+function closeExport() { document.getElementById('export-modal').style.display='none'; }
+function copyHTML() {
+  document.getElementById('html-output').select();
+  document.execCommand('copy');
+  const btn=document.querySelector('.btn-copy-html');
+  btn.textContent='✓ Copied!';
+  setTimeout(()=>btn.textContent='Copy HTML',2000);
+}
+
+// ── DRAG AND DROP ──
+let dragSrcIndex = null;
+
+function initDragDrop(container) {
+  Array.from(container.querySelectorAll('.player-row')).forEach((row, i) => {
+    const handle = row.querySelector('.drag-handle');
+    if (!handle) return;
+
+    handle.addEventListener('mousedown', () => { row.draggable = true; });
+    handle.addEventListener('mouseleave', () => {
+      if (dragSrcIndex === null) row.draggable = false;
+    });
+
+    row.addEventListener('dragstart', e => {
+      dragSrcIndex = i;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.draggable = false;
+      row.classList.remove('dragging');
+      dragSrcIndex = null;
+      container.querySelectorAll('.player-row').forEach(r => r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      container.querySelectorAll('.player-row').forEach(r => r.classList.remove('drag-over'));
+      if (i !== dragSrcIndex) row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      const src = dragSrcIndex;
+      if (src === null || src === i) return;
+      // Reorder both data arrays to keep them in sync
+      const [mp] = players.splice(src, 1);
+      players.splice(i, 0, mp);
+      const [ms] = playerState.splice(src, 1);
+      playerState.splice(i, 0, ms);
+      renderPlayers();
+    });
+  });
+}
+
+
+// ── LIVE GAME FETCHER (ESPN API) ──
+const NBA_LOGOS = id => `https://cdn.nba.com/logos/nba/${id}/primary/L/logo.svg`;
+const ESPN_ABB_TO_NBA_ID = {
+  ATL:1610612737,BOS:1610612738,CLE:1610612739,NOP:1610612740,CHI:1610612741,
+  DAL:1610612742,DEN:1610612743,DET:1610612765,GSW:1610612744,HOU:1610612745,
+  LAC:1610612746,LAL:1610612747,MEM:1610612763,MIA:1610612748,MIL:1610612749,
+  MIN:1610612750,BKN:1610612751,NYK:1610612752,ORL:1610612753,IND:1610612754,
+  PHI:1610612755,PHX:1610612756,POR:1610612757,SAC:1610612758,SAS:1610612759,
+  OKC:1610612760,TOR:1610612761,UTA:1610612762,WAS:1610612764,CHA:1610612766
+};
+
+const NAME_TO_ESPN = {
+  "Cade Cunningham":4432166,"Jalen Duren":4433621,"Javonte Green":2596112,
+  "Tobias Harris":6440,"Ronald Holland II":4683771,"Kevin Huerter":4066372,
+  "Daniss Jenkins":5107199,"Isaac Jones":5107818,"Bobi Klintman":4906923,
+  "Chaz Lanier":4700852,"Caris LeVert":2991043,"Wendell Moore Jr.":4592187,
+  "Paul Reed":4278562,"Duncan Robinson":3157465,"Dario Saric":3032978,
+  "Marcus Sasser":4432107,"Tolu Smith":4397882,"Isaiah Stewart":4432810,
+  "Ausar Thompson":4684742,
+};
+
+// ESPN athlete id (string) → our espnId — faster and more reliable than name matching
+const NAME_TO_ESPN_ID = {
+  "4432166":4432166, // Cade Cunningham
+  "4433621":4433621, // Jalen Duren
+  "2596112":2596112, // Javonte Green
+  "6440":6440,       // Tobias Harris
+  "4683771":4683771, // Ronald Holland II
+  "4066372":4066372, // Kevin Huerter
+  "5107199":5107199, // Daniss Jenkins
+  "5107818":5107818, // Isaac Jones
+  "4906923":4906923, // Bobi Klintman
+  "4700852":4700852, // Chaz Lanier
+  "2991043":2991043, // Caris LeVert
+  "4592187":4592187, // Wendell Moore Jr.
+  "4278562":4278562, // Paul Reed
+  "3157465":3157465, // Duncan Robinson
+  "3032978":3032978, // Dario Saric
+  "4432107":4432107, // Marcus Sasser
+  "4397882":4397882, // Tolu Smith
+  "4432810":4432810, // Isaiah Stewart
+  "4684742":4684742, // Ausar Thompson
+};
+
+let scheduleGames = []; // all completed games, newest first
+
+function setLoadingState(msg) {
+  const el = document.getElementById('sb-meta');
+  if (el) el.textContent = msg;
+}
+
+function fmtDate(dateStr) {
+  // dateStr is like "2026-02-20T00:30Z"
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+async function loadSchedule() {
+  const sel = document.getElementById('game-select');
+  const btn = document.getElementById('btn-load-game');
+  try {
+    const res = await fetch(
+      'https://corsproxy.io/?' + encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${(() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })()}`)
+    );
+    if (!res.ok) throw new Error('Schedule API error ' + res.status);
+    const json = await res.json();
+
+    // Filter completed games, sort newest first
+    // ESPN schedule uses 'events' or 'games' depending on endpoint version
+    const allEvents = json.events || json.games || [];
+    scheduleGames = allEvents
+      .filter(e => {
+        const st = e.competitions?.[0]?.status?.type;
+        return st?.completed === true || st?.state === 'post';
+      })
+      .sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    if (!scheduleGames.length) {
+      sel.innerHTML = '<option>No completed games found</option>';
+      return;
+    }
+
+    // Populate dropdown
+    sel.innerHTML = scheduleGames.map((e,i) => {
+      const comp = e.competitions[0];
+      const competitors = comp.competitors || [];
+      // Since this is the DET schedule endpoint, one team is always Detroit.
+      // Find DET by abbreviation; if missing fall back to the home/away name in event.name
+      const det = competitors.find(c => c.team?.abbreviation === 'DET');
+      const opp = competitors.find(c => c.team?.abbreviation !== 'DET');
+      if (!opp) return '';
+      // If det not found, infer home/away from event name e.g. "Detroit Pistons at Toronto Raptors"
+      const isHome = det ? det.homeAway === 'home' : !e.name?.startsWith('Detroit');
+      const detScore = det?.score?.displayValue ?? det?.score ?? '?';
+      const oppScore = opp.score?.displayValue ?? opp.score ?? '?';
+      const won = det?.winner;
+      const result = won ? 'W' : 'L';
+      const oppName = opp.team?.shortDisplayName || opp.team?.abbreviation || '???';
+      const label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  ${result} ${detScore}-${oppScore}`;
+      return `<option value="${i}">${label}</option>`;
+    }).filter(Boolean).join('');
+
+    btn.disabled = false;
+
+    // Auto-load the most recent game
+    loadSelectedGame();
+
+  } catch(err) {
+    sel.innerHTML = `<option>Error: ${err.message}</option>`;
+    setLoadingState(`Could not load schedule: ${err.message}`);
+    console.error('loadSchedule failed:', err);
+  }
+}
+
+async function loadSelectedGame() {
+  const sel = document.getElementById('game-select');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx) || !scheduleGames[idx]) return;
+
+  const event = scheduleGames[idx];
+  const comp  = event.competitions[0];
+  const competitors = comp.competitors || [];
+  // ESPN sometimes omits DET abbreviation — find opp as whoever isn't Detroit
+  // Detroit is always one of the two; identify by abbreviation or by elimination
+  let det = competitors.find(c => c.team?.abbreviation === 'DET');
+  let opp = competitors.find(c => c.team?.abbreviation !== 'DET');
+  // If DET not found by abbreviation, infer from event name order:
+  // "Detroit Pistons at X" → DET is index 1 (away), opp is index 0 (home)
+  // "X at Detroit Pistons" → DET is index 0 (home), opp is index 1 (away)  
+  if (!det && competitors.length === 2) {
+    const detIsFirst = event.name?.startsWith('Detroit');
+    det = detIsFirst ? competitors[0] : competitors[1];
+    opp = detIsFirst ? competitors[1] : competitors[0];
+  }
+  if (!opp) { console.error('Could not find competitors', comp); return; }
+  const detScore = det?.score?.displayValue ?? det?.score ?? '?';
+  const oppScore = opp.score?.displayValue ?? opp.score ?? '?';
+  const detWon   = det?.winner ?? false;
+  const oppAbb   = opp.team?.abbreviation || '';
+  // Use ESPN logo directly from competitor data (no mapping needed)
+  const oppLogo = opp.team?.logos?.[0]?.href || '';
+
+  // Update scoreboard
+  const logoEl = document.getElementById('sb-away-logo');
+  logoEl.src = oppLogo;
+  logoEl.style.display = oppLogo ? '' : 'none';
+  document.getElementById('sb-away-name').textContent  = opp.team.displayName;
+  document.getElementById('sb-away-score').textContent = oppScore;
+  document.getElementById('sb-det-score').textContent  = detScore;
+  document.getElementById('sb-meta').textContent       = fmtDate(event.date);
+  const badge = document.getElementById('sb-badge');
+  badge.textContent      = detWon ? '🏆 Pistons Win' : '❌ Pistons Loss';
+  badge.style.background = detWon ? 'var(--red)' : '#555';
+
+  // Load box score
+  await fetchBoxScore(comp.id, oppAbb);
+}
+
+async function fetchBoxScore(gameId, oppAbb) {
+  setLoadingState('⏳ Loading stats…');
+  try {
+    const res = await fetch(
+      'https://corsproxy.io/?' + encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`)
+    );
+    if (!res.ok) throw new Error('Box score error ' + res.status);
+    const json = await res.json();
+
+    const boxscores = json.boxscore?.players || [];
+
+    // Find DET by checking which team has athletes in our Pistons roster map
+    // This is the most reliable method — doesn't depend on abbreviation or id matching
+    const detTeam = boxscores.find(t =>
+      t.statistics?.[0]?.athletes?.some(a => NAME_TO_ESPN_ID[a.athlete?.id])
+    );
+    if (!detTeam) { console.warn('Could not find DET in boxscore. Teams:', boxscores.map(t=>t.team?.abbreviation)); return; }
+
+    // Labels: ["MIN","PTS","FG","3PT","FT","REB","AST","TO","STL","BLK","OREB","DREB","PF","+/-"]
+    // Stats is a flat array of strings matching label positions
+    const labels = detTeam.statistics?.[0]?.labels || [];
+    const gi = k => labels.indexOf(k); // get index of label
+
+
+
+    // Reset all stats and overrides for fresh game load
+    Object.keys(GAME_STATS).forEach(id => { GAME_STATS[id] = null; });
+    Object.keys(statOverrides).forEach(id => { delete statOverrides[id]; });
+
+    const athletes = detTeam.statistics?.[0]?.athletes || [];
+    athletes.forEach(a => {
+      if (a.didNotPlay) return;
+      // Match by ESPN athlete id first (most reliable), then by name
+      const athleteEspnId = a.athlete?.id;
+      const espnId = athleteEspnId && NAME_TO_ESPN_ID[athleteEspnId]
+        ? NAME_TO_ESPN_ID[athleteEspnId]
+        : NAME_TO_ESPN[a.athlete?.displayName];
+      if (!espnId) return;
+      const s = a.stats || [];
+      GAME_STATS[espnId] = {
+        PTS: parseInt(s[gi('PTS')]) || 0,
+        REB: parseInt(s[gi('REB')]) || 0,
+        AST: parseInt(s[gi('AST')]) || 0,
+        STL: parseInt(s[gi('STL')]) || 0,
+        BLK: parseInt(s[gi('BLK')]) || 0,
+        TO:  parseInt(s[gi('TO')])  || 0,
+        FG:  s[gi('FG')]   || '0-0',
+        '3P':s[gi('3PT')]  || '0-0',
+        FT:  s[gi('FT')]   || '0-0',
+        MIN: s[gi('MIN')]  || '0',
+      };
+    });
+
+    players.forEach((p,i) => {
+      playerState[i].included = GAME_STATS[p.espnId] !== null;
+    });
+
+    renderPlayers();
+
+    // Restore meta date after renderPlayers (which doesn't touch scoreboard)
+    const sel = document.getElementById('game-select');
+    const si  = parseInt(sel.value);
+    if (!isNaN(si) && scheduleGames[si]) {
+      document.getElementById('sb-meta').textContent = fmtDate(scheduleGames[si].date);
+    }
+
+  } catch(e) {
+    setLoadingState('Could not load box score');
+    console.error('fetchBoxScore error:', e);
+  }
+}
+
+loadSchedule();
+
+renderPlayers();
+</script>
+</body>
+</html>
