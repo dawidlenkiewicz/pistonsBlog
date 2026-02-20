@@ -737,25 +737,30 @@ async function loadSchedule() {
   const sel = document.getElementById('game-select');
   const btn = document.getElementById('btn-load-game');
   try {
-    const seasonYear = (() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })();
-    const espnUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${seasonYear}`;
-
-    // Race all proxies simultaneously — use whichever responds first with valid data
-    const tryProxy = async (makeUrl) => {
-      const r = await fetch(makeUrl(espnUrl));
-      if (!r.ok) throw new Error('not ok');
-      const text = await r.text();
-      const parsed = JSON.parse(text);
-      const j = parsed.contents ? JSON.parse(parsed.contents) : parsed;
-      if (!j.events) throw new Error('no events');
-      return j;
-    };
-
-    const json = await Promise.any([
-      tryProxy(url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`),
-      tryProxy(url => `https://corsproxy.io/?${encodeURIComponent(url)}`),
-      tryProxy(url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`),
-    ]).catch(() => { throw new Error('All proxies failed'); });
+    // Fetch full season by hitting scoreboard with 2-month chunks — no proxy needed
+    // ESPN scoreboard works cross-origin directly from browser
+    const chunks = [
+      '20251001-20251130',
+      '20251201-20260131',
+      '20260201-20260415',
+    ];
+    const allEvents = [];
+    await Promise.all(chunks.map(async range => {
+      try {
+        const r = await fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${range}&limit=200`
+        );
+        if (!r.ok) return;
+        const d = await r.json();
+        (d.events || []).forEach(ev => {
+          // Only keep Pistons games
+          const comps = ev.competitions?.[0]?.competitors || [];
+          if (comps.some(c => c.team?.abbreviation === 'DET')) allEvents.push(ev);
+        });
+      } catch {}
+    }));
+    if (!allEvents.length) throw new Error('No Pistons games found');
+    const json = { events: allEvents };
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
@@ -778,20 +783,23 @@ async function loadSchedule() {
       const opp = competitors.find(c => c.team?.abbreviation !== 'DET');
       if (!opp) return '';
       // If det not found, infer home/away from event name e.g. "Detroit Pistons at Toronto Raptors"
-      const st = e.competitions?.[0]?.status?.type;
+      const comp0 = e.competitions?.[0];
+      const st = comp0?.status?.type;
       const completed = st?.completed === true || st?.state === 'post';
-      const isHome = det ? det.homeAway === 'home' : !e.name?.startsWith('Detroit');
-      const oppName = opp.team?.shortDisplayName || opp.team?.abbreviation || '???';
+      const comps = comp0?.competitors || [];
+      const detC = comps.find(c => c.team?.abbreviation === 'DET');
+      const oppC = comps.find(c => c.team?.abbreviation !== 'DET');
+      const isHome = detC ? detC.homeAway === 'home' : false;
+      const oppName = oppC?.team?.shortDisplayName || oppC?.team?.abbreviation || '???';
       let label;
       if (completed) {
-        const detScore = det?.score?.displayValue ?? det?.score ?? '?';
-        const oppScore = opp.score?.displayValue ?? opp.score ?? '?';
-        const won = det?.winner;
+        const detScore = detC?.score?.displayValue ?? detC?.score?.value ?? '?';
+        const oppScore = oppC?.score?.displayValue ?? oppC?.score?.value ?? '?';
+        const won = detC?.winner;
         const result = won ? 'W' : 'L';
         label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  ${result} ${detScore}-${oppScore}`;
       } else {
-        const time = new Date(e.date).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit', timeZoneName:'short'});
-        label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}  — ${time}`;
+        label = `${fmtDate(e.date)}  ${isHome ? 'vs' : '@'} ${oppName}`;
       }
       return `<option value="${i}">${label}</option>`;
     }).filter(Boolean).join('');
@@ -930,66 +938,45 @@ let injuriesCache = null;
 
 async function fetchAllInjuries() {
   if (injuriesCache) return injuriesCache;
-  const url = 'https://www.espn.com/nba/injuries';
-  // Try proxies in parallel
-  const tryProxy = async (makeUrl) => {
-    const r = await fetch(makeUrl(url));
-    if (!r.ok) throw new Error('not ok');
-    const text = await r.text();
-    const parsed = JSON.parse(text);
-    return parsed.contents || parsed; // allorigins wraps, others don't
+  // sports.core.api.espn.com works cross-origin without proxy
+  // Fetch injuries for all 30 teams in parallel
+  const TEAM_IDS = {
+    'Atlanta Hawks':1,'Boston Celtics':2,'Charlotte Hornets':30,'Chicago Bulls':4,
+    'Cleveland Cavaliers':5,'Dallas Mavericks':6,'Denver Nuggets':7,'Detroit Pistons':8,
+    'Golden State Warriors':9,'Houston Rockets':10,'Indiana Pacers':11,'LA Clippers':12,
+    'Los Angeles Lakers':13,'Memphis Grizzlies':29,'Miami Heat':14,'Milwaukee Bucks':15,
+    'Minnesota Timberwolves':16,'Brooklyn Nets':17,'New York Knicks':18,'Orlando Magic':19,
+    'Philadelphia 76ers':20,'Phoenix Suns':21,'Portland Trail Blazers':22,'Sacramento Kings':23,
+    'San Antonio Spurs':24,'Oklahoma City Thunder':25,'Toronto Raptors':28,'Utah Jazz':26,
+    'Washington Wizards':27,'New Orleans Pelicans':3
   };
-  let html = '';
-  try {
-    html = await Promise.any([
-      tryProxy(u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`),
-      tryProxy(u => `https://corsproxy.io/?${encodeURIComponent(u)}`),
-    ]);
-    if (typeof html !== 'string') html = '';
-  } catch(e) {
-    console.error('injuries proxy failed', e);
-    return {};
-  }
-
-  // Parse ESPN injuries page
-  // Structure: each team has a header with the team name, then a <table> with rows
   const result = {};
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-
-  // Walk through all elements — find team name headers then table rows
-  let currentTeam = '';
-  const allEls = doc.querySelectorAll('h2, h3, .injuries__teamName, [class*="TeamName"], tr, img[title]');
-
-  // Also try: ESPN renders team name as img title or as text near the table
-  // Scan the raw HTML for team patterns
-  const teamPattern = /(Atlanta Hawks|Boston Celtics|Brooklyn Nets|Charlotte Hornets|Chicago Bulls|Cleveland Cavaliers|Dallas Mavericks|Denver Nuggets|Detroit Pistons|Golden State Warriors|Houston Rockets|Indiana Pacers|LA Clippers|Los Angeles Lakers|Memphis Grizzlies|Miami Heat|Milwaukee Bucks|Minnesota Timberwolves|New Orleans Pelicans|New York Knicks|Oklahoma City Thunder|Orlando Magic|Philadelphia 76ers|Phoenix Suns|Portland Trail Blazers|Sacramento Kings|San Antonio Spurs|Toronto Raptors|Utah Jazz|Washington Wizards)/g;
-
-  // Split HTML into team sections using team names as delimiters
-  const sections = html.split(teamPattern);
-  // sections[0] = before first team, sections[1] = "Detroit Pistons", sections[2] = content after that, etc.
-  for (let i = 1; i < sections.length; i += 2) {
-    const teamName = sections[i];
-    const sectionHtml = sections[i+1] || '';
-    // Parse this section for table rows
-    const sDoc = parser.parseFromString('<table>' + sectionHtml + '</table>', 'text/html');
-    const rows = sDoc.querySelectorAll('tr');
-    const injuries = [];
-    rows.forEach(row => {
-      const cells = row.querySelectorAll('td');
-      if (cells.length < 4) return;
-      const playerName = cells[0]?.textContent?.trim();
-      if (!playerName || playerName === 'NAME') return;
-      const status = cells[3]?.textContent?.trim() || 'Out';
-      const comment = cells[4]?.textContent?.trim() || '';
-      // Extract injury type from comment — first parenthetical
-      const injMatch = comment.match(/\(([^)]+)\)/);
-      const injType = injMatch ? injMatch[1] : 'Injury';
-      injuries.push({ name: playerName, status, injType, comment });
-    });
-    if (injuries.length) result[teamName] = injuries;
-  }
-
+  await Promise.all(Object.entries(TEAM_IDS).map(async ([teamName, id]) => {
+    try {
+      const r = await fetch(`https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/teams/${id}/injuries?limit=50`);
+      if (!r.ok) return;
+      const json = await r.json();
+      const items = json.items || [];
+      if (!items.length) return;
+      // Each item is a $ref URL — fetch them all in parallel
+      const details = await Promise.all(items.map(async item => {
+        try {
+          const dr = await fetch(item.$ref);
+          if (!dr.ok) return null;
+          return await dr.json();
+        } catch { return null; }
+      }));
+      const injuries = details.filter(Boolean).map(inj => {
+        const name = inj.athlete?.displayName || '?';
+        const statusText = inj.status?.type?.description || inj.type?.description || 'Out';
+        // Injury type from details
+        const injType = inj.details?.detail || inj.type?.text || 'Injury';
+        const comment = inj.longComment || inj.shortComment || '';
+        return { name, status: statusText, injType, comment };
+      });
+      if (injuries.length) result[teamName] = injuries;
+    } catch {}
+  }));
   console.log('Injuries loaded for teams:', Object.keys(result));
   injuriesCache = result;
   return result;
@@ -1047,37 +1034,36 @@ async function buildPreviewHTML() {
   const st = comp.status?.type;
   const completed = st?.completed === true || st?.state === 'post';
 
-  // Records & standings — check all possible ESPN schedule data fields
-  console.log('DET competitor:', JSON.stringify(det).slice(0,400));
-  console.log('OPP competitor:', JSON.stringify(opp).slice(0,400));
+  // Records from scoreboard competitor data
+  const getRecord = (comp) => {
+    const recs = comp?.records || comp?.record || [];
+    const overall = recs.find?.(r => r.name === 'overall' || r.type === 'total' || r.displayName === 'Overall');
+    return overall?.summary || overall?.displayValue || recs[0]?.summary || recs[0]?.displayValue || '';
+  };
+  const detRecord = getRecord(det);
+  const oppRecord = getRecord(opp);
 
-  const detRecord = det?.record?.[0]?.displayValue
-    || det?.records?.[0]?.displayValue
-    || det?.records?.find(r=>r.name==='overall')?.displayValue
-    || det?.records?.find(r=>r.type==='total')?.summary || '';
-  const oppRecord = opp?.record?.[0]?.displayValue
-    || opp?.records?.[0]?.displayValue
-    || opp?.records?.find(r=>r.name==='overall')?.displayValue
-    || opp?.records?.find(r=>r.type==='total')?.summary || '';
-
-  // Standings fetch — ESPN standings API
+  // Fetch standings from ESPN standings API (works cross-origin)
   let detStanding = '', oppStanding = '';
   try {
-    const standUrl = 'https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026&type=0';
-    const sRes = await fetch(standUrl);
-    if (sRes.ok) {
-      const sJson = await sRes.json();
-      const allTeams = (sJson.standings?.entries || []);
-      allTeams.forEach(entry => {
+    const [eastRes, westRes] = await Promise.all([
+      fetch('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026&group=conference&type=0'),
+      fetch('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?season=2026&group=conference&type=0'),
+    ]);
+    const standJson = eastRes.ok ? await eastRes.json() : null;
+    if (standJson) {
+      const entries = standJson.standings?.entries || standJson.children?.flatMap(c=>c.standings?.entries||[]) || [];
+      entries.forEach((entry, idx) => {
         const abbr = entry.team?.abbreviation;
-        const rank = entry.stats?.find(s => s.name === 'playoffSeed' || s.abbreviation === 'SEED')?.value
-          || entry.stats?.find(s => s.name === 'rank')?.value;
-        const confName = entry.team?.conferenceId === '2' ? 'East' : 'West';
-        if (abbr === 'DET' && rank) detStanding = `${rank}${ordinal(rank)} in ${confName}`;
-        if (abbr === (opp?.team?.abbreviation) && rank) oppStanding = `${rank}${ordinal(rank)} in ${confName}`;
+        const seed = entry.stats?.find(s=>s.abbreviation==='seed'||s.name==='playoffSeed')?.value || (idx+1);
+        const conf = entry.team?.conferenceId;
+        const confName = conf === '3' ? 'East' : conf === '5' ? 'West' : '';
+        const label = confName ? `${Math.round(seed)}${ordinal(Math.round(seed))} ${confName}` : '';
+        if (abbr === 'DET') detStanding = label;
+        if (abbr === opp?.team?.abbreviation) oppStanding = label;
       });
     }
-  } catch(e) { console.log('standings fetch failed', e); }
+  } catch(e) { console.log('standings failed:', e); }
 
   const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
   const oppLogo = opp?.team?.logos?.[0]?.href || '';
