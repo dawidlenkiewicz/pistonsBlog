@@ -714,10 +714,11 @@ async function loadSchedule() {
   const btn = document.getElementById('btn-load-game');
   try {
     const res = await fetch(
-      'https://corsproxy.io/?' + encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${(() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })()}`)
+      `https://api.allorigins.win/get?url=${encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${(() => { const n = new Date(); return n.getMonth() >= 9 ? n.getFullYear()+1 : n.getFullYear(); })()}`)}`
     );
     if (!res.ok) throw new Error('Schedule API error ' + res.status);
-    const json = await res.json();
+    const wrapper = await res.json();
+    const json = JSON.parse(wrapper.contents);
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
@@ -814,10 +815,11 @@ async function fetchBoxScore(gameId, oppAbb) {
   setLoadingState('⏳ Loading stats…');
   try {
     const res = await fetch(
-      'https://corsproxy.io/?' + encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`)
+      `https://api.allorigins.win/get?url=${encodeURIComponent(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`)}`
     );
     if (!res.ok) throw new Error('Box score error ' + res.status);
-    const json = await res.json();
+    const wrapper = await res.json();
+    const json = JSON.parse(wrapper.contents);
 
     const boxscores = json.boxscore?.players || [];
 
