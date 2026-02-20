@@ -739,15 +739,15 @@ async function loadSchedule() {
     // Fetch full season by hitting scoreboard with 2-month chunks — no proxy needed
     // ESPN scoreboard works cross-origin directly from browser
     const chunks = [
-      '20251001-20251130',
-      '20251201-20260131',
-      '20260201-20260415',
+      '20251001-20251231',
+      '20260101-20260228',
+      '20260301-20260415',
     ];
     const allEvents = [];
     await Promise.all(chunks.map(async range => {
       try {
         const r = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${range}&limit=200`
+          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${range}&limit=1000`
         );
         if (!r.ok) return;
         const d = await r.json();
@@ -963,7 +963,8 @@ async function fetchAllInjuries() {
           // If item has athlete directly, use it; otherwise fetch $ref
           if (item.athlete) return item;
           if (!item.$ref) return null;
-          const dr = await fetch(item.$ref);
+          const refUrl = item.$ref.replace('http://', 'https://');
+          const dr = await fetch(refUrl);
           if (!dr.ok) return null;
           return await dr.json();
         } catch { return null; }
