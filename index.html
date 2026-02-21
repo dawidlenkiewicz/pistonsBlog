@@ -1601,30 +1601,37 @@ async function loadQuotesForCard() {
         console.log('Summary status:', r.status);
         if (!r.ok) continue;
         const j = await r.json();
-        // ESPN summary news is empty — search ESPN news API directly for this game
-        const gameDate = new Date(game.date);
-        const dateStr = gameDate.toISOString().slice(0,10).replace(/-/g,'');
-        const searchUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?team=pistons&limit=5&dates=${dateStr}`;
-        const newsRes = await fetch(searchUrl);
-        const newsJson = newsRes.ok ? await newsRes.json() : {};
-        const articles = newsJson.articles || newsJson.news || [];
-        console.log('ESPN news articles for', oppName, ':', articles.length, articles.map(a=>a.headline));
-
+        // Use corsproxy to fetch ESPN game recap page directly
+        const espnGameUrl = `https://www.espn.com/nba/game/_/gameId/${gameId}`;
         let combinedText = '';
-        for (const article of articles.slice(0, 3)) {
-          const url = article.links?.web?.href || article.links?.mobile?.href;
-          if (!url) continue;
-          try {
-            const ar = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-            if (!ar.ok) continue;
+        try {
+          const ar = await fetch('https://corsproxy.io/?' + encodeURIComponent(espnGameUrl));
+          console.log('ESPN game page status:', ar.status, 'for', oppName);
+          if (ar.ok) {
             const html = await ar.text();
             const tmp = document.createElement('div');
             tmp.innerHTML = html;
             tmp.querySelectorAll('script,style,nav,footer,header,aside').forEach(e=>e.remove());
-            const extracted = (tmp.innerText||'').slice(0,4000);
-            console.log('Article text sample:', extracted.slice(0,200));
-            combinedText += extracted + ' ';
-          } catch(e) { console.log('Article fetch error:', e.message); continue; }
+            combinedText = (tmp.innerText||'').slice(0,6000);
+            console.log('Game page text sample:', combinedText.slice(0,400));
+          }
+        } catch(e) { console.log('Game page fetch error:', e.message); }
+
+        // Also try ESPN recap article URL
+        if (!combinedText.trim()) {
+          try {
+            const recapUrl = `https://www.espn.com/nba/recap/_/gameId/${gameId}`;
+            const ar2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(recapUrl));
+            console.log('Recap status:', ar2.status);
+            if (ar2.ok) {
+              const html2 = await ar2.text();
+              const tmp2 = document.createElement('div');
+              tmp2.innerHTML = html2;
+              tmp2.querySelectorAll('script,style,nav,footer,header,aside').forEach(e=>e.remove());
+              combinedText = (tmp2.innerText||'').slice(0,6000);
+              console.log('Recap text sample:', combinedText.slice(0,400));
+            }
+          } catch(e) { console.log('Recap fetch error:', e.message); }
         }
         console.log('combinedText length:', combinedText.length);
 
