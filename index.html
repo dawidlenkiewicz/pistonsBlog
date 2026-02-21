@@ -1615,7 +1615,6 @@ async function loadQuotesForCard() {
         let quotes;
         try { quotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
         catch(e) { console.log('Parse error:', e.message, raw.slice(0,200)); quotes = []; }
-        catch(e) { quotes = []; }
         if (Array.isArray(quotes) && quotes.length) {
           allGameQuotes.push({ oppName, gameDate, detWon, quotes });
         }
