@@ -1146,13 +1146,13 @@ async function buildPreviewHTML() {
 
   // Last 5 games form — from schedule data (already loaded)
   const getLast5 = (targetAbb) => {
-    const completedGames = scheduleGames.filter(e => {
+    // Use idx directly — indexOf can fail if object reference differs
+    const before = scheduleGames.slice(0, idx);
+    const completedBefore = before.filter(e => {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
     });
-    const thisIdx = scheduleGames.indexOf(event);
-    const before = completedGames.filter(e => scheduleGames.indexOf(e) < thisIdx);
-    return before.slice(-5).map(e => {
+    return completedBefore.slice(-5).map(e => {
       const comps = e.competitions?.[0]?.competitors || [];
       const t = comps.find(c => c.team?.abbreviation === targetAbb);
       if (t?.winner === true) return 'W';
@@ -1167,7 +1167,6 @@ async function buildPreviewHTML() {
   };
   const detLast5 = getLast5('DET');
   const oppLast5 = getLast5(oppAbb);
-  console.log('last5 DET:', detLast5, 'opp:', oppLast5, 'scheduleGames:', scheduleGames.length, 'thisIdx:', scheduleGames.indexOf(event));
 
   // Head-to-head this season
   const h2hGames = scheduleGames.filter(e => {
