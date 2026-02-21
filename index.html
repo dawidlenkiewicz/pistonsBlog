@@ -1208,7 +1208,7 @@ async function buildPreviewHTML() {
     : 'First meeting this season';
 
   // Score block — rebuilt after home/away assignment below; init for upcoming games
-  let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div><div style="${F}font-size:10px;color:#bbb;letter-spacing:1px;margin-top:4px;">${h2hLabel}</div>`;
+  let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">${fmtDate(event.date)}</div><div style="${F}display:inline-block;background:#1a1e2d;color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 18px;">${h2hLabel}</div>`;
 
   const teamCell = (logo, name, record, standing, last5) => {
     const dotsHtml = (last5 && last5.length) ? last5.map(r =>
@@ -1242,7 +1242,7 @@ async function buildPreviewHTML() {
         <span style="color:${RED}">${homeTeam.score}</span>
       </div>
       <div style="${F}font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin:8px 0 4px;">${fmtDate(event.date)}</div>
-      <div style="${F}display:inline-block;background:#1a1e2d;color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 16px;margin-bottom:10px;">${h2hLabel}</div>
+      <div style="${F}display:inline-block;background:#1a1e2d;color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 18px;margin-bottom:10px;">${h2hLabel}</div>
       <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 18px;text-transform:uppercase;">${detWon?'🏆 Pistons Win':'❌ Pistons Loss'}</div>`;
   }
 
