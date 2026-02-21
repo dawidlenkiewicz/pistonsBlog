@@ -1138,13 +1138,8 @@ async function buildPreviewHTML() {
 
   // Last 5 games form — from schedule data (already loaded)
   const getLast5 = (targetAbb) => {
-    const before = scheduleGames.slice(0, idx);
-    if (targetAbb === 'DET') {
-      console.log('before length:', before.length, 'first date:', before[0]?.date, 'last date:', before[before.length-1]?.date);
-      const states = before.map(e => e.competitions?.[0]?.status?.type?.state);
-      console.log('states:', states.join(','));
-    }
-    const completedBefore = before.filter(e => {
+    // scheduleGames is sorted newest-first, so games played BEFORE this one are at higher indices
+    const completedBefore = scheduleGames.slice(idx + 1).filter(e => {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
     });
