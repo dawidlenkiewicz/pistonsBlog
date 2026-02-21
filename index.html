@@ -1159,6 +1159,7 @@ async function buildPreviewHTML() {
   };
   const detLast5 = getLast5('DET');
   const oppLast5 = getLast5(oppAbb);
+  console.log('idx:', idx, 'detLast5:', detLast5, 'oppLast5:', oppLast5);
 
   // Head-to-head this season
   const h2hGames = scheduleGames.filter(e => {
@@ -1213,7 +1214,7 @@ async function buildPreviewHTML() {
         <span style="color:${RED}">${homeTeam.score}</span>
       </div>
       <div style="${F}font-size:10px;color:#aaa;letter-spacing:2px;text-transform:uppercase;margin:8px 0 4px;">${fmtDate(event.date)}</div>
-      <div style="${F}font-size:11px;font-weight:700;color:#555;letter-spacing:1px;margin-bottom:10px;border:1px solid #e2e6ef;display:inline-block;padding:3px 10px;background:#f8f9fc;">${h2hLabel}</div>
+      <div style="${F}display:inline-block;background:#1a1e2d;color:#fff;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 16px;margin-bottom:10px;">${h2hLabel}</div>
       <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 18px;text-transform:uppercase;">${detWon?'🏆 Pistons Win':'❌ Pistons Loss'}</div>`;
   }
 
