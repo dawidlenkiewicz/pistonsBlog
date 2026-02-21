@@ -1159,7 +1159,34 @@ async function buildPreviewHTML() {
     }).filter(Boolean);
   };
   const detLast5 = getLast5('DET');
-  const oppLast5 = getLast5(oppAbb);
+  // For opponent: fetch last 30 days of ALL NBA games, find opp's last 5
+  let oppLast5 = [];
+  try {
+    const gameDate = new Date(event.date);
+    const from = new Date(gameDate); from.setDate(from.getDate() - 20);
+    const to   = new Date(gameDate); to.setDate(to.getDate() - 1);
+    const fmt  = d => d.toISOString().slice(0,10).replace(/-/g,'');
+    const url  = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${fmt(from)}-${fmt(to)}&limit=500`;
+    const r = await fetch(url);
+    if (r.ok) {
+      const j = await r.json();
+      const games = (j.events||[]).filter(e => {
+        const st = e.competitions?.[0]?.status?.type;
+        return (st?.completed || st?.state === 'post') &&
+               e.competitions?.[0]?.competitors?.some(c => c.team?.abbreviation === oppAbb);
+      });
+      oppLast5 = games.slice(-5).reverse().map(e => {
+        const comps = e.competitions[0].competitors;
+        const t = comps.find(c => c.team?.abbreviation === oppAbb);
+        const o = comps.find(c => c.team?.abbreviation !== oppAbb);
+        const ts = parseFloat(t?.score?.displayValue ?? t?.score);
+        const os = parseFloat(o?.score?.displayValue ?? o?.score);
+        if (!isNaN(ts) && !isNaN(os) && ts !== os) return ts > os ? 'W' : 'L';
+        return t?.winner ? 'W' : 'L';
+      });
+      console.log('oppLast5', oppAbb, oppLast5);
+    }
+  } catch(e) { console.log('opp last5 fetch failed', e); }
 
   // Head-to-head this season
   const h2hGames = scheduleGames.filter(e => {
