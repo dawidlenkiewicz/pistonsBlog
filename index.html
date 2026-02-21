@@ -929,6 +929,9 @@ async function fetchBoxScore(gameId, oppAbb) {
     if (!res.ok) throw new Error('Box score error ' + res.status);
     const json = await res.json();
 
+    console.log('summary keys:', Object.keys(json));
+    console.log('boxscore keys:', Object.keys(json.boxscore || {}));
+    console.log('boxscore.players:', json.boxscore?.players?.length, json.boxscore?.teams?.length);
     const boxscores = json.boxscore?.players || [];
     // Store team stats for export
     const teamStatsSrc = json.boxscore?.teams || [];
@@ -1124,17 +1127,23 @@ async function buildPreviewHTML() {
     }
   } catch(e) { console.log('standings failed:', e); }
 
+  const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
+  const oppLogo = opp?.team?.logos?.[0]?.href
+    || (opp?.team?.abbreviation ? `https://a.espncdn.com/i/teamlogos/nba/500/${opp.team.abbreviation.toLowerCase()}.png` : '');
+  const detName = 'Detroit Pistons';
+  const oppName = opp?.team?.displayName || '';
+  const oppAbb  = opp?.team?.abbreviation || '';
+  const isHome  = det ? det.homeAway === 'home' : !event.name?.startsWith('Detroit');
+
   // Last 5 games form — from schedule data (already loaded)
   const getLast5 = (targetAbb) => {
-    const completed = scheduleGames.filter(e => {
+    const completedGames = scheduleGames.filter(e => {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
     });
-    // Find this game's index
     const thisIdx = scheduleGames.indexOf(event);
-    const before = completed.filter(e => scheduleGames.indexOf(e) < thisIdx);
-    const last5 = before.slice(-5);
-    return last5.map(e => {
+    const before = completedGames.filter(e => scheduleGames.indexOf(e) < thisIdx);
+    return before.slice(-5).map(e => {
       const comps = e.competitions?.[0]?.competitors || [];
       const t = comps.find(c => c.team?.abbreviation === targetAbb);
       return t?.winner ? 'W' : 'L';
@@ -1143,7 +1152,7 @@ async function buildPreviewHTML() {
   const detLast5 = getLast5('DET');
   const oppLast5 = getLast5(oppAbb);
 
-  // Head-to-head this season — scan schedule for matchups between DET and opp
+  // Head-to-head this season
   const h2hGames = scheduleGames.filter(e => {
     const st = e.competitions?.[0]?.status?.type;
     if (!(st?.completed === true || st?.state === 'post')) return false;
@@ -1154,20 +1163,12 @@ async function buildPreviewHTML() {
   let detH2HWins = 0, oppH2HWins = 0;
   h2hGames.forEach(e => {
     const comps = e.competitions?.[0]?.competitors || [];
-    const det = comps.find(c => c.team?.abbreviation === 'DET');
-    if (det?.winner) detH2HWins++; else oppH2HWins++;
+    const d = comps.find(c => c.team?.abbreviation === 'DET');
+    if (d?.winner) detH2HWins++; else oppH2HWins++;
   });
   const h2hLabel = h2hGames.length
-    ? `Season series: DET ${detH2HWins}–${oppH2HWins}`
+    ? \`Season series: DET \${detH2HWins}–\${oppH2HWins}\`
     : 'First meeting this season';
-
-  const detLogo = det?.team?.logos?.[0]?.href || teamLogos.DET;
-  const oppLogo = opp?.team?.logos?.[0]?.href
-    || (opp?.team?.abbreviation ? `https://a.espncdn.com/i/teamlogos/nba/500/${opp.team.abbreviation.toLowerCase()}.png` : '');
-  const detName = 'Detroit Pistons';
-  const oppName = opp?.team?.displayName || '';
-  const oppAbb  = opp?.team?.abbreviation || '';
-  const isHome  = det ? det.homeAway === 'home' : !event.name?.startsWith('Detroit');
 
   // Score block — rebuilt after home/away assignment below; init for upcoming games
   let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div><div style="${F}font-size:10px;color:#bbb;letter-spacing:1px;margin-top:4px;">${h2hLabel}</div>`;
