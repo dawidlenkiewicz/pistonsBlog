@@ -523,42 +523,48 @@ function buildExportHTML() {
 
   const BIG = ['PTS','AST','REB'];
 
-  // Team stats box
+  // Team stats box — align with scoreboard home/away positioning
   const ts = window._teamStats || {};
-  console.log('buildExport _teamStats keys:', Object.keys(ts));
-  const detAbbExport = 'DET';
+  const detIsHomeExport = document.getElementById('sb-det-home')?.dataset?.home === 'true';
   const oppAbbExport = Object.keys(ts).find(k => k !== 'DET') || '';
-  const detTs = ts[detAbbExport] || {};
+  const detTs = ts['DET'] || {};
   const oppTs = ts[oppAbbExport] || {};
   const oppNameExport = document.getElementById('sb-away-name')?.textContent || oppAbbExport;
+  // Left = away, right = home (matching scoreboard)
+  const leftTs  = detIsHomeExport ? oppTs : detTs;
+  const rightTs = detIsHomeExport ? detTs : oppTs;
+  const leftName  = detIsHomeExport ? oppNameExport : 'Detroit Pistons';
+  const rightName = detIsHomeExport ? 'Detroit Pistons' : oppNameExport;
+  const leftColor  = detIsHomeExport ? '#555' : RED;
+  const rightColor = detIsHomeExport ? RED : '#555';
   const statRows = [
-    ['FG%',  'FG%',  false],
-    ['3P%',  '3P%',  false],
-    ['FT%',  'FT%',  false],
-    ['REB',  'REB',  false],
-    ['AST',  'AST',  false],
-    ['TO',   'TO',   true],   // lower is better
-    ['STL',  'STL',  false],
-    ['BLK',  'BLK',  false],
+    ['FG%', 'FG%',  false],
+    ['3P%', '3P%',  false],
+    ['FT%', 'FT%',  false],
+    ['REB', 'REB',  false],
+    ['AST', 'AST',  false],
+    ['TO',  'TO',   true],
+    ['STL', 'STL',  false],
+    ['BLK', 'BLK',  false],
   ];
   const fmtStat = (v) => (v === undefined || v === null || v === '') ? '—' : String(v);
   const teamStatsBlock = Object.keys(detTs).length ? `
 <table style="${F}width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e6ef;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
   <tr style="background:#f8f9fc;">
-    <td style="${F}padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${RED};width:45%;text-align:center;">Detroit Pistons</td>
+    <td style="${F}padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${leftColor};width:45%;text-align:center;">${leftName}</td>
     <td style="${F}padding:8px 4px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;text-align:center;width:10%;"> </td>
-    <td style="${F}padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;width:45%;text-align:center;">${oppNameExport}</td>
+    <td style="${F}padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${rightColor};width:45%;text-align:center;">${rightName}</td>
   </tr>
   ${statRows.map(([label, key, flip]) => {
-    const dv = fmtStat(detTs[key]);
-    const ov = fmtStat(oppTs[key]);
-    const dn = parseFloat(dv), on = parseFloat(ov);
-    const detBetter = !isNaN(dn) && !isNaN(on) && (flip ? dn < on : dn > on);
-    const oppBetter = !isNaN(dn) && !isNaN(on) && (flip ? on < dn : on > dn);
+    const lv = fmtStat(leftTs[key]);
+    const rv = fmtStat(rightTs[key]);
+    const ln = parseFloat(lv), rn = parseFloat(rv);
+    const leftBetter  = !isNaN(ln) && !isNaN(rn) && (flip ? ln < rn : ln > rn);
+    const rightBetter = !isNaN(ln) && !isNaN(rn) && (flip ? rn < ln : rn > ln);
     return `<tr style="border-top:1px solid #f0f1f5;">
-    <td style="${F}padding:7px 12px;font-size:15px;font-weight:800;color:${detBetter?'#111':'#aaa'};text-align:center;">${dv}</td>
+    <td style="${F}padding:7px 12px;font-size:15px;font-weight:800;color:${leftBetter?'#111':'#aaa'};text-align:center;">${lv}</td>
     <td style="${F}padding:7px 4px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#bbb;text-align:center;">${label}</td>
-    <td style="${F}padding:7px 12px;font-size:15px;font-weight:800;color:${oppBetter?'#111':'#aaa'};text-align:center;">${ov}</td>
+    <td style="${F}padding:7px 12px;font-size:15px;font-weight:800;color:${rightBetter?'#111':'#aaa'};text-align:center;">${rv}</td>
   </tr>`;
   }).join('')}
 </table>` : '';
