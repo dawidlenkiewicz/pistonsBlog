@@ -1601,9 +1601,9 @@ async function loadQuotesForCard() {
 
     console.log('Games to search:', gameList.map(g=>g.oppName));
 
-    const prompt = 'I need post-game quotes from Detroit Pistons coaches and players for these recent NBA games:\n' +
-      gameList.map((g,i) => (i+1) + '. vs ' + g.oppName + ' on ' + g.gameDateStr).join('\n') +
-      '\n\nReturn ONLY a JSON array. Each item: {"game":"vs OPPONENT on DATE","speaker":"Name","quote":"exact quote","context":"brief context","polish":"Polish translation"}. Max 3 quotes per game. Only include quotes you are confident are real. If unsure about any game, skip it. No markdown, no explanation, just the JSON array.';
+    const prompt = 'These Detroit Pistons NBA games have already been played in the 2025-26 season. Search your knowledge for any real post-game quotes from JB Bickerstaff (head coach) or Pistons players after these games:\n' +
+      gameList.map((g,i) => (i+1) + '. Detroit Pistons vs ' + g.oppName + ' - ' + g.gameDateStr).join('\n') +
+      '\n\nFor each game you find real quotes for, return them in this JSON array format. Each item: {"game":"vs OPPONENT","speaker":"Name","quote":"exact quote","context":"brief context","polish":"Polish translation"}. Max 3 quotes per game. Only include quotes you are genuinely confident about - do not fabricate. If you cannot find real quotes for a game, skip it entirely. Return ONLY the JSON array with no markdown or explanation.';
 
     try {
       console.log('Sending batched request...');
