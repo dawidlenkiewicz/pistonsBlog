@@ -531,21 +531,16 @@ function buildExportHTML() {
   const oppTs = ts[oppAbbExport] || {};
   const oppNameExport = document.getElementById('sb-away-name')?.textContent || oppAbbExport;
   const statRows = [
-    ['FG%',  'fieldGoalPct'],
-    ['3P%',  'threePointPct'],
-    ['FT%',  'freeThrowPct'],
-    ['REB',  'rebounds'],
-    ['AST',  'assists'],
-    ['TO',   'turnovers'],
-    ['STL',  'steals'],
-    ['BLK',  'blocks'],
+    ['FG%',  'FG%',  false],
+    ['3P%',  '3P%',  false],
+    ['FT%',  'FT%',  false],
+    ['REB',  'REB',  false],
+    ['AST',  'AST',  false],
+    ['TO',   'TO',   true],   // lower is better
+    ['STL',  'STL',  false],
+    ['BLK',  'BLK',  false],
   ];
-  const fmtPct = (v) => {
-    if (v === undefined || v === '') return '—';
-    const n = parseFloat(v);
-    if (isNaN(n)) return v;
-    return n < 1 ? (n*100).toFixed(1)+'%' : String(v);
-  };
+  const fmtStat = (v) => (v === undefined || v === null || v === '') ? '—' : String(v);
   const teamStatsBlock = Object.keys(detTs).length ? `
 <table style="${F}width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2e6ef;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.05);">
   <tr style="background:#f8f9fc;">
@@ -553,11 +548,10 @@ function buildExportHTML() {
     <td style="${F}padding:8px 4px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#aaa;text-align:center;width:10%;"> </td>
     <td style="${F}padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;width:45%;text-align:center;">${oppNameExport}</td>
   </tr>
-  ${statRows.map(([label, key]) => {
-    const dv = fmtPct(detTs[key] ?? detTs[label]);
-    const ov = fmtPct(oppTs[key] ?? oppTs[label]);
+  ${statRows.map(([label, key, flip]) => {
+    const dv = fmtStat(detTs[key]);
+    const ov = fmtStat(oppTs[key]);
     const dn = parseFloat(dv), on = parseFloat(ov);
-    const flip = label === 'TO'; // lower is better for turnovers
     const detBetter = !isNaN(dn) && !isNaN(on) && (flip ? dn < on : dn > on);
     const oppBetter = !isNaN(dn) && !isNaN(on) && (flip ? on < dn : on > dn);
     return `<tr style="border-top:1px solid #f0f1f5;">
@@ -929,26 +923,35 @@ async function fetchBoxScore(gameId, oppAbb) {
     if (!res.ok) throw new Error('Box score error ' + res.status);
     const json = await res.json();
 
-    console.log('summary keys:', Object.keys(json));
-    console.log('boxscore keys:', Object.keys(json.boxscore || {}));
-    console.log('boxscore.players:', json.boxscore?.players?.length, json.boxscore?.teams?.length);
-    const boxscores = json.boxscore?.players || [];
+    console.log('boxscore teams len:', json.boxscore?.teams?.length, 'keys:', Object.keys(json.boxscore||{}));
+    const boxscores = json.boxscore?.teams || [];
     // Store team stats for export — team totals are in statistics[1] (index 1 = team stats, 0 = player stats)
     window._teamStats = {};
     boxscores.forEach(t => {
       const abb = t.team?.abbreviation;
       if (!abb) return;
       const stats = {};
-      // statistics[1] is team totals row
-      const teamTotals = t.statistics?.[1]?.totals || t.statistics?.[0]?.totals || [];
-      const teamLabels = t.statistics?.[1]?.labels || t.statistics?.[0]?.labels || [];
-      teamLabels.forEach((lbl, i) => { if (teamTotals[i]) stats[lbl] = teamTotals[i]; });
-      // Also try direct displayValue format
+      // Each statistics group has labels[] and a totals[] row (last row = team totals)
       (t.statistics || []).forEach(group => {
-        if (group.keys) group.keys.forEach((k,i) => { stats[k] = group.totals?.[i] || stats[k]; });
+        const labels = group.labels || [];
+        const rows = group.athletes || [];
+        const totals = group.totals || (rows.length ? rows[rows.length-1]?.stats : null) || [];
+        labels.forEach((lbl, i) => {
+          if (totals[i] !== undefined) stats[lbl] = totals[i];
+        });
       });
+      // Compute percentages from made-att strings
+      const calcPct = (key) => {
+        const v = stats[key];
+        if (!v) return null;
+        const [m, a] = v.split('-').map(Number);
+        if (!a) return null;
+        return (m/a*100).toFixed(1) + '%';
+      };
+      stats['FG%']  = calcPct('FG')  || stats['FG%'];
+      stats['3P%']  = calcPct('3PT') || stats['3P%'];
+      stats['FT%']  = calcPct('FT')  || stats['FT%'];
       window._teamStats[abb] = stats;
-      console.log('team stats', abb, stats);
     });
 
     // Find DET — try abbreviation first, then roster map
@@ -1153,7 +1156,14 @@ async function buildPreviewHTML() {
     return before.slice(-5).map(e => {
       const comps = e.competitions?.[0]?.competitors || [];
       const t = comps.find(c => c.team?.abbreviation === targetAbb);
-      return t?.winner ? 'W' : 'L';
+      if (t?.winner === true) return 'W';
+      if (t?.winner === false) return 'L';
+      // Fallback: compare scores
+      const other = comps.find(c => c.team?.abbreviation !== targetAbb);
+      const ts = parseFloat(t?.score?.displayValue ?? t?.score);
+      const os = parseFloat(other?.score?.displayValue ?? other?.score);
+      if (!isNaN(ts) && !isNaN(os)) return ts > os ? 'W' : 'L';
+      return 'L';
     });
   };
   const detLast5 = getLast5('DET');
