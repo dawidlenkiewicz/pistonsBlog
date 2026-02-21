@@ -1143,22 +1143,22 @@ async function buildPreviewHTML() {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
     });
-    return completedBefore.slice(-5).map(e => {
+    // Take 5 most recent, then reverse so dots show oldest→newest left to right
+    return completedBefore.slice(0, 5).reverse().map(e => {
       const comps = e.competitions?.[0]?.competitors || [];
       const t = comps.find(c => c.team?.abbreviation === targetAbb);
-      if (t?.winner === true) return 'W';
-      if (t?.winner === false) return 'L';
-      // Fallback: compare scores
       const other = comps.find(c => c.team?.abbreviation !== targetAbb);
+      // Use score comparison as primary (winner flag unreliable on scoreboard endpoint)
       const ts = parseFloat(t?.score?.displayValue ?? t?.score);
       const os = parseFloat(other?.score?.displayValue ?? other?.score);
-      if (!isNaN(ts) && !isNaN(os)) return ts > os ? 'W' : 'L';
-      return 'L';
+      if (!isNaN(ts) && !isNaN(os) && ts !== os) return ts > os ? 'W' : 'L';
+      if (t?.winner === true) return 'W';
+      if (t?.winner === false) return 'L';
+      return '?';
     });
   };
   const detLast5 = getLast5('DET');
   const oppLast5 = getLast5(oppAbb);
-  console.log('idx:', idx, 'detLast5:', detLast5, 'oppLast5:', oppLast5);
 
   // Head-to-head this season
   const h2hGames = scheduleGames.filter(e => {
