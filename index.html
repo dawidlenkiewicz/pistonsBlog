@@ -1451,7 +1451,7 @@ renderPlayers();
         style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
 
       <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Headline</label>
-      <input type="text" id="ic2-headline" placeholder="CADE DROPS 42" oninput="updateCard()" maxlength="30"
+      <input type="text" id="ic2-headline" placeholder="CADE DROPS 42" oninput="updateCard()"
         style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;outline:none;margin-bottom:12px;">
 
       <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Stats / Subtext</label>
@@ -1577,7 +1577,7 @@ function translateQuote() {
   // live preview as user types — just update the card subtext
   const text = document.getElementById('ic-q-text').value.trim();
   if (text) {
-    document.getElementById('ic2-sub').value = text.slice(0, 60);
+    document.getElementById('ic2-sub').value = text;
     updateCard();
   }
 }
@@ -1653,10 +1653,10 @@ async function triggerTranslation() {
 
 function useOnCard(text, type) {
   if (type === 'short') {
-    document.getElementById('ic2-headline').value = text.slice(0,30).toUpperCase();
+    document.getElementById('ic2-headline').value = text.toUpperCase();
     updateCard();
   } else {
-    document.getElementById('ic2-sub').value = text.slice(0,60);
+    document.getElementById('ic2-sub').value = text;
     updateCard();
   }
   // flash feedback
@@ -1671,7 +1671,7 @@ function copyQuoteToCard(el) {
   const quoteEl = el.querySelector('div[style*="font-style:italic"]');
   if (!quoteEl) return;
   const text = quoteEl.textContent.replace(/^"|"$/g,'').trim();
-  document.getElementById('ic2-sub').value = text.slice(0, 60);
+  document.getElementById('ic2-sub').value = text;
   updateCard();
   // Flash feedback
   const orig = el.style.background;
@@ -1724,7 +1724,9 @@ function updateCard() {
   tagEl.style.display = tag ? 'block' : 'none';
 
   const hlEl = document.getElementById('ic2-hl-el');
-  hlEl.textContent = hl; hlEl.style.fontSize = size + 'px'; hlEl.style.textAlign = align;
+  hlEl.textContent = hl; // If quote is pasted as headline, scale down automatically
+const autoSize = hl.length > 40 ? Math.min(parseInt(size), 48) : hl.length > 20 ? Math.min(parseInt(size), 64) : size;
+hlEl.style.fontSize = autoSize + 'px'; hlEl.style.textAlign = align;
 
   const barEl = document.getElementById('ic2-bar-el');
   barEl.style.background = ic2Accent;
