@@ -1595,13 +1595,9 @@ async function loadQuotesForCard() {
 
       try {
         console.log('Searching quotes for:', gameDateStr, 'vs', oppName);
-        const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const resp = await fetch('https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer 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',
-            'HTTP-Referer': 'https://dawidlenkiewicz.github.io',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: 'meta-llama/llama-3.3-70b-instruct:free',
             messages: [{
