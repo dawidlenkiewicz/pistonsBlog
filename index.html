@@ -930,27 +930,12 @@ async function fetchBoxScore(gameId, oppAbb) {
       const abb = t.team?.abbreviation;
       if (!abb) return;
       const stats = {};
-      // Each statistics group has labels[] and a totals[] row (last row = team totals)
-      (t.statistics || []).forEach(group => {
-        const labels = group.labels || [];
-        const rows = group.athletes || [];
-        const totals = group.totals || (rows.length ? rows[rows.length-1]?.stats : null) || [];
-        labels.forEach((lbl, i) => {
-          if (totals[i] !== undefined) stats[lbl] = totals[i];
-        });
+      // t.statistics is a flat array of {abbreviation, displayValue, label}
+      (t.statistics || []).forEach(s => {
+        const key = s.abbreviation || s.label;
+        if (key) stats[key] = s.displayValue;
       });
-      // Compute percentages from made-att strings
-      const calcPct = (key) => {
-        const v = stats[key];
-        if (!v) return null;
-        const [m, a] = v.split('-').map(Number);
-        if (!a) return null;
-        return (m/a*100).toFixed(1) + '%';
-      };
-      stats['FG%']  = calcPct('FG')  || stats['FG%'];
-      stats['3P%']  = calcPct('3PT') || stats['3P%'];
-      stats['FT%']  = calcPct('FT')  || stats['FT%'];
-      console.log('team stats raw', abb, JSON.stringify(t.statistics).slice(0,600));
+      console.log('team stats keys', abb, Object.keys(stats), JSON.stringify(stats).slice(0,400));
       window._teamStats[abb] = stats;
     });
 
