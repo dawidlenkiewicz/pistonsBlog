@@ -1567,122 +1567,70 @@ async function loadQuotesForCard() {
   const list = document.getElementById('ic-quotes-list');
   btn.textContent = '⏳ Loading…';
   btn.disabled = true;
-  list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Fetching articles…</div>`;
+  list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Searching for quotes…</div>';
 
   try {
-    console.log('scheduleGames total:', scheduleGames.length);
-    // Get last 5 completed Pistons games from scheduleGames
-    const completedGames = scheduleGames.filter(e => {
+    const completedGames = (window.scheduleGames||[]).filter(e => {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
-    }).slice(0, 5); // newest 5
-
-    console.log('completedGames:', completedGames.length, completedGames.map(e=>e.date));
+    }).slice(0, 5);
 
     if (!completedGames.length) {
-      list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No recent games found.<br>Select a game first.</div>`;
+      list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;">No recent games found.</div>';
       btn.textContent = 'Load Quotes'; btn.disabled = false; return;
     }
 
     const allGameQuotes = [];
 
     for (const game of completedGames) {
-      const gameId = game.id;
       const opp = game.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
-      const oppName = opp?.team?.shortDisplayName || opp?.team?.displayName || '?';
-      const gameDate = new Date(game.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      const oppName = opp?.team?.shortDisplayName || opp?.team?.displayName || 'opponent';
       const det = game.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
       const detWon = det?.winner;
+      const gameDateStr = new Date(game.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+      const gameDate = new Date(game.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
 
-      // Fetch summary to get news
       try {
-        console.log('Fetching summary for game:', gameId, oppName);
-        const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`);
-        console.log('Summary status:', r.status);
-        if (!r.ok) continue;
-        const j = await r.json();
-        // Use corsproxy to fetch ESPN game recap page directly
-        const espnGameUrl = `https://www.espn.com/nba/game/_/gameId/${gameId}`;
-        let combinedText = '';
-        try {
-          const ar = await fetch('https://corsproxy.io/?' + encodeURIComponent(espnGameUrl));
-          console.log('ESPN game page status:', ar.status, 'for', oppName);
-          if (ar.ok) {
-            const html = await ar.text();
-            const tmp = document.createElement('div');
-            tmp.innerHTML = html;
-            tmp.querySelectorAll('script,style,nav,footer,header,aside').forEach(e=>e.remove());
-            combinedText = (tmp.innerText||'').slice(0,6000);
-            console.log('Game page text sample:', combinedText.slice(0,400));
-          }
-        } catch(e) { console.log('Game page fetch error:', e.message); }
-
-        // Also try ESPN recap article URL
-        if (!combinedText.trim()) {
-          try {
-            const recapUrl = `https://www.espn.com/nba/recap/_/gameId/${gameId}`;
-            const ar2 = await fetch('https://corsproxy.io/?' + encodeURIComponent(recapUrl));
-            console.log('Recap status:', ar2.status);
-            if (ar2.ok) {
-              const html2 = await ar2.text();
-              const tmp2 = document.createElement('div');
-              tmp2.innerHTML = html2;
-              tmp2.querySelectorAll('script,style,nav,footer,header,aside').forEach(e=>e.remove());
-              combinedText = (tmp2.innerText||'').slice(0,6000);
-              console.log('Recap text sample:', combinedText.slice(0,400));
-            }
-          } catch(e) { console.log('Recap fetch error:', e.message); }
-        }
-        console.log('combinedText length:', combinedText.length);
-
-        if (!combinedText.trim()) continue;
-
-        console.log('=== ARTICLE TEXT for', oppName, '===');
-        console.log(combinedText.slice(0, 2000));
-        console.log('=== END ===');
-
-        // Claude API — extract quotes + translate to Polish
+        console.log('Searching quotes for:', gameDateStr, 'vs', oppName);
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
-            max_tokens: 1200,
+            max_tokens: 1500,
+            tools: [{"type":"web_search_20250305","name":"web_search"}],
             messages: [{
               role: 'user',
-              content: `From this NBA post-game article, extract notable quotes from JB Bickerstaff (Pistons head coach) and Detroit Pistons players. Return ONLY a JSON array — no markdown, no explanation. Each item: {"speaker":"Name","quote":"exact quote","context":"1 sentence what it was about","polish":"Polish translation of the quote"}. Max 5 quotes. If none found return [].
-
-${combinedText.slice(0,7000)}`
+              content: 'Search for post-game quotes from JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players after their NBA game vs ' + oppName + ' on ' + gameDateStr + '. Then return ONLY a JSON array with no markdown or explanation. Each item must have: speaker, quote, context (1 sentence), polish (Polish translation). Max 5 quotes. If none found return [].'
             }]
           })
         });
         const d = await resp.json();
-        const raw = d.content?.[0]?.text || '[]';
+        console.log('Response blocks:', d.content?.map(c=>c.type));
+        const textBlock = d.content?.filter(c=>c.type==='text').pop();
+        const raw = textBlock?.text || '[]';
+        console.log('Raw:', raw.slice(0,400));
         let quotes;
-        try { quotes = JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g,'').trim()); }
+        try { quotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
         catch(e) { quotes = []; }
-
-        if (quotes.length) {
+        if (Array.isArray(quotes) && quotes.length) {
           allGameQuotes.push({ oppName, gameDate, detWon, quotes });
         }
-      } catch(e) { continue; }
+      } catch(e) { console.log('Error for', oppName, e.message); }
     }
 
     if (!allGameQuotes.length) {
-      list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No quotes found<br>in recent articles.</div>`;
-      btn.textContent = 'Load Quotes'; btn.disabled = false; return;
+      list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No quotes found.</div>';
+      btn.textContent = '↺ Reload'; btn.disabled = false; return;
     }
 
-    // Render grouped by game
     list.innerHTML = allGameQuotes.map(g => `
       <div style="margin-bottom:20px;">
         <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;padding-bottom:6px;border-bottom:1px solid #1a1a1a;margin-bottom:10px;">
           ${g.gameDate} vs ${g.oppName} <span style="color:${g.detWon?'#22c55e':'#ef4444'};margin-left:6px;">${g.detWon?'W':'L'}</span>
         </div>
         ${g.quotes.map(q => `
-          <div style="margin-bottom:12px;padding:10px 12px;background:#111;border-left:2px solid #C8102E;cursor:pointer;transition:background 0.15s;"
-               onclick="copyQuoteToCard(this)"
-               title="Click to copy to headline">
+          <div style="margin-bottom:12px;padding:10px 12px;background:#111;border-left:2px solid #C8102E;cursor:pointer;" onclick="copyQuoteToCard(this)" title="Click to copy to card">
             <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">${q.speaker}</div>
             <div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">"${q.quote}"</div>
             ${q.context ? `<div style="font-size:10px;color:#333;margin-top:4px;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
@@ -1697,10 +1645,11 @@ ${combinedText.slice(0,7000)}`
     `).join('');
 
   } catch(e) {
-    list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#444;margin-top:20px;text-align:center;">${e.message}</div>`;
+    list.innerHTML = '<div style="color:#444;font-size:11px;margin-top:20px;text-align:center;">' + e.message + '</div>';
   }
   btn.textContent = '↺ Reload'; btn.disabled = false;
 }
+
 
 function copyQuoteToCard(el) {
   // Extract the English quote text and put into subtext field
