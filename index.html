@@ -1585,41 +1585,58 @@ async function loadQuotesForCard() {
 
     const allGameQuotes = [];
 
-    for (const game of completedGames) {
+    // Build game list for single batched API call
+    const gameList = completedGames.map(game => {
       const opp = game.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
       const oppName = opp?.team?.shortDisplayName || opp?.team?.displayName || 'opponent';
       const det = game.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
-      const detWon = det?.winner;
-      const gameDateStr = new Date(game.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-      const gameDate = new Date(game.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return {
+        gameId: game.id,
+        oppName,
+        detWon: det?.winner,
+        gameDate: new Date(game.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}),
+        gameDateStr: new Date(game.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+      };
+    });
 
-      try {
-        console.log('Searching quotes for:', gameDateStr, 'vs', oppName);
-        const resp = await fetch('https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'google/gemma-3-27b-it:free',
-            messages: [{
-              role: 'user',
-              content: 'What did JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players say in post-game interviews after the NBA game vs ' + oppName + ' on ' + gameDateStr + '? Return ONLY a JSON array, no markdown, no explanation. Each item: {"speaker":"Name","quote":"exact quote","context":"1 sentence context","polish":"Polish translation of the quote"}. Max 5 quotes. If you do not know any real quotes from this specific game, return [].'
-            }]
-          })
-        });
-        const d = await resp.json();
-        console.log('OpenRouter status:', resp.status, JSON.stringify(d).slice(0,300));
-        const raw = d.choices?.[0]?.message?.content || '[]';
-        console.log('Raw:', raw.slice(0,400));
-        let quotes;
-        try { quotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-        catch(e) { console.log('Parse error:', e.message); quotes = []; }
-        if (Array.isArray(quotes) && quotes.length) {
-          allGameQuotes.push({ oppName, gameDate, detWon, quotes });
+    console.log('Games to search:', gameList.map(g=>g.oppName));
+
+    const prompt = 'I need post-game quotes from Detroit Pistons coaches and players for these recent NBA games:\n' +
+      gameList.map((g,i) => (i+1) + '. vs ' + g.oppName + ' on ' + g.gameDateStr).join('\n') +
+      '\n\nReturn ONLY a JSON array. Each item: {"game":"vs OPPONENT on DATE","speaker":"Name","quote":"exact quote","context":"brief context","polish":"Polish translation"}. Max 3 quotes per game. Only include quotes you are confident are real. If unsure about any game, skip it. No markdown, no explanation, just the JSON array.';
+
+    try {
+      console.log('Sending batched request...');
+      const resp = await fetch('https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'mistralai/mistral-7b-instruct:free',
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const d = await resp.json();
+      console.log('OpenRouter status:', resp.status, JSON.stringify(d).slice(0,300));
+      const raw = d.choices?.[0]?.message?.content || '[]';
+      console.log('Raw:', raw.slice(0,600));
+      let allQuotes;
+      try { allQuotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+      catch(e) { console.log('Parse error:', e.message); allQuotes = []; }
+
+      // Group by game
+      if (Array.isArray(allQuotes) && allQuotes.length) {
+        for (const g of gameList) {
+          const gQuotes = allQuotes.filter(q => q.game && q.game.toLowerCase().includes(g.oppName.toLowerCase()));
+          if (gQuotes.length) allGameQuotes.push({ oppName: g.oppName, gameDate: g.gameDate, detWon: g.detWon, quotes: gQuotes });
         }
-      } catch(e) { console.log('Error for', oppName, e.message); }
-    }
+        // If grouping failed, just show all under first game
+        if (!allGameQuotes.length) {
+          allGameQuotes.push({ oppName: 'Recent Games', gameDate: '', detWon: null, quotes: allQuotes });
+        }
+      }
+    } catch(e) { console.log('Batch error:', e.message); }
 
-    if (!allGameQuotes.length) {
+        if (!allGameQuotes.length) {
       list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No quotes found.</div>';
       btn.textContent = '↺ Reload'; btn.disabled = false; return;
     }
