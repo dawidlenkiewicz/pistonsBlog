@@ -1163,7 +1163,7 @@ async function buildPreviewHTML() {
   let oppLast5 = [];
   try {
     const gameDate = new Date(event.date);
-    const from = new Date(gameDate); from.setDate(from.getDate() - 20);
+    const from = new Date(gameDate); from.setDate(from.getDate() - 35);
     const to   = new Date(gameDate); to.setDate(to.getDate() - 1);
     const fmt  = d => d.toISOString().slice(0,10).replace(/-/g,'');
     const url  = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${fmt(from)}-${fmt(to)}&limit=500`;
@@ -1175,7 +1175,8 @@ async function buildPreviewHTML() {
         return (st?.completed || st?.state === 'post') &&
                e.competitions?.[0]?.competitors?.some(c => c.team?.abbreviation === oppAbb);
       });
-      oppLast5 = games.slice(-5).reverse().map(e => {
+      // games is chronological (oldest first from scoreboard), take last 5, keep that order
+      oppLast5 = games.slice(-5).map(e => {
         const comps = e.competitions[0].competitors;
         const t = comps.find(c => c.team?.abbreviation === oppAbb);
         const o = comps.find(c => c.team?.abbreviation !== oppAbb);
