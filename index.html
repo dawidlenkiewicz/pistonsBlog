@@ -1596,10 +1596,13 @@ async function loadQuotesForCard() {
 
       // Fetch summary to get news
       try {
+        console.log('Fetching summary for game:', gameId, oppName);
         const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`);
+        console.log('Summary status:', r.status);
         if (!r.ok) continue;
         const j = await r.json();
         const news = j.news || [];
+        console.log('News articles found:', news.length, news.map(n=>n.headline||n.title));
         if (!news.length) continue;
 
         // Fetch first 2 articles
