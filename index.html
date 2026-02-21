@@ -525,6 +525,7 @@ function buildExportHTML() {
 
   // Team stats box
   const ts = window._teamStats || {};
+  console.log('buildExport _teamStats keys:', Object.keys(ts));
   const detAbbExport = 'DET';
   const oppAbbExport = Object.keys(ts).find(k => k !== 'DET') || '';
   const detTs = ts[detAbbExport] || {};
@@ -935,7 +936,6 @@ async function fetchBoxScore(gameId, oppAbb) {
         const key = s.abbreviation || s.label;
         if (key) stats[key] = s.displayValue;
       });
-      console.log('team stats keys', abb, Object.keys(stats), JSON.stringify(stats).slice(0,400));
       window._teamStats[abb] = stats;
     });
 
