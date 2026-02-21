@@ -1146,16 +1146,17 @@ async function buildPreviewHTML() {
     // Take 5 most recent, then reverse so dots show oldest→newest left to right
     return completedBefore.slice(0, 5).reverse().map(e => {
       const comps = e.competitions?.[0]?.competitors || [];
+      // For opp team: find by abbreviation; if not found (opp plays different opponent that game), skip
       const t = comps.find(c => c.team?.abbreviation === targetAbb);
+      if (!t) return null;
       const other = comps.find(c => c.team?.abbreviation !== targetAbb);
-      // Use score comparison as primary (winner flag unreliable on scoreboard endpoint)
       const ts = parseFloat(t?.score?.displayValue ?? t?.score);
       const os = parseFloat(other?.score?.displayValue ?? other?.score);
       if (!isNaN(ts) && !isNaN(os) && ts !== os) return ts > os ? 'W' : 'L';
       if (t?.winner === true) return 'W';
       if (t?.winner === false) return 'L';
-      return '?';
-    });
+      return null;
+    }).filter(Boolean);
   };
   const detLast5 = getLast5('DET');
   const oppLast5 = getLast5(oppAbb);
