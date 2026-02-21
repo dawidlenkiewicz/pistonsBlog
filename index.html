@@ -1595,19 +1595,24 @@ async function loadQuotesForCard() {
 
       try {
         console.log('Searching quotes for:', gameDateStr, 'vs', oppName);
-        const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=AIzaSyB8L00XmVtgX3Jxq0FEDKTRbM0l56G_Obk';
-        const prompt = 'What did JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players say in post-game interviews after the game vs ' + oppName + ' on ' + gameDateStr + '? List real direct quotes if you know them. Return ONLY a JSON array, no markdown, no explanation. Each item: {"speaker":"Name","quote":"exact quote","context":"1 sentence context","polish":"Polish translation"}. Max 5 quotes. If you do not know any real quotes, return [].';
-        const resp = await fetch(geminiUrl, {
+        const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer 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',
+            'HTTP-Referer': 'https://dawidlenkiewicz.github.io',
+          },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.1 }
+            model: 'meta-llama/llama-3.3-70b-instruct:free',
+            messages: [{
+              role: 'user',
+              content: 'What did JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players say in post-game interviews after the NBA game vs ' + oppName + ' on ' + gameDateStr + '? Return ONLY a JSON array, no markdown, no explanation. Each item: {"speaker":"Name","quote":"exact quote","context":"1 sentence context","polish":"Polish translation of the quote"}. Max 5 quotes. If you do not know any real quotes from this specific game, return [].'
+            }]
           })
         });
         const d = await resp.json();
-        console.log('Gemini status:', resp.status, JSON.stringify(d).slice(0,300));
-        const raw = (d.candidates?.[0]?.content?.parts || []).map(p=>p.text||'').join('') || '[]';
+        console.log('OpenRouter status:', resp.status, JSON.stringify(d).slice(0,300));
+        const raw = d.choices?.[0]?.message?.content || '[]';
         console.log('Raw:', raw.slice(0,400));
         let quotes;
         try { quotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
