@@ -1601,29 +1601,30 @@ async function loadQuotesForCard() {
         console.log('Summary status:', r.status);
         if (!r.ok) continue;
         const j = await r.json();
-        const news = j.news || [];
-        console.log('News articles found:', news.length, news.map(n=>n.headline||n.title));
-        if (!news.length) continue;
+        // ESPN summary news is empty — search ESPN news API directly for this game
+        const gameDate = new Date(game.date);
+        const dateStr = gameDate.toISOString().slice(0,10).replace(/-/g,'');
+        const searchUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news?team=pistons&limit=5&dates=${dateStr}`;
+        const newsRes = await fetch(searchUrl);
+        const newsJson = newsRes.ok ? await newsRes.json() : {};
+        const articles = newsJson.articles || newsJson.news || [];
+        console.log('ESPN news articles for', oppName, ':', articles.length, articles.map(a=>a.headline));
 
-        // Fetch first 2 articles
-        console.log('Game:', oppName, 'news count:', news.length, 'first article:', JSON.stringify(news[0]).slice(0,200));
         let combinedText = '';
-        for (const article of news.slice(0, 2)) {
-          const url = article.links?.web?.href || article.link;
-          console.log('Article URL:', url);
-          if (!url) { console.log('No URL found'); continue; }
+        for (const article of articles.slice(0, 3)) {
+          const url = article.links?.web?.href || article.links?.mobile?.href;
+          if (!url) continue;
           try {
             const ar = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-            console.log('Fetch status:', ar.status);
             if (!ar.ok) continue;
             const html = await ar.text();
             const tmp = document.createElement('div');
             tmp.innerHTML = html;
-            tmp.querySelectorAll('script,style,nav,footer,header').forEach(e=>e.remove());
-            const extracted = (tmp.innerText||'').slice(0,3000);
-            console.log('Extracted text sample:', extracted.slice(0,300));
+            tmp.querySelectorAll('script,style,nav,footer,header,aside').forEach(e=>e.remove());
+            const extracted = (tmp.innerText||'').slice(0,4000);
+            console.log('Article text sample:', extracted.slice(0,200));
             combinedText += extracted + ' ';
-          } catch(e) { console.log('Fetch error:', e.message); continue; }
+          } catch(e) { console.log('Article fetch error:', e.message); continue; }
         }
         console.log('combinedText length:', combinedText.length);
 
