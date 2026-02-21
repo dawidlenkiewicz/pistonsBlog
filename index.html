@@ -587,7 +587,7 @@ function buildExportHTML() {
     const chipsDiv = `<div style="display:flex;flex-wrap:nowrap;gap:4px;overflow:hidden;">${chips}</div>`;
 
     const gradeCell = s.grade
-      ? `<td style="padding:16px 20px;vertical-align:middle;text-align:center;border-left:1px solid #eee;white-space:nowrap;min-width:80px;">
+      ? `<td style="padding:16px 20px;vertical-align:middle;text-align:center;border-left:1px solid #eee;white-space:nowrap;width:80px;">
            <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#bbb;margin-bottom:6px;">Grade</div>
            <div style="${F}font-size:40px;font-weight:900;color:${RED};line-height:1;">${s.grade}</div>
          </td>`
@@ -603,7 +603,7 @@ function buildExportHTML() {
       style="display:block;width:72px;height:90px;object-fit:cover;object-position:top center;">`;
 
     return `
-<table style="${F}width:100%;border-collapse:collapse;background:${isOutstanding?GOLD_BG:'#fff'};border:1px solid ${isOutstanding?'#f0d080':'#e2e6ef'};margin-bottom:10px;box-shadow:${isOutstanding?'0 2px 8px rgba(184,148,42,0.15)':'0 2px 6px rgba(0,0,0,0.05)'};${isOutstanding?'border-left:4px solid '+GOLD+';':''}">
+<table style="${F}width:100%;table-layout:fixed;border-collapse:collapse;background:${isOutstanding?GOLD_BG:'#fff'};border:1px solid ${isOutstanding?'#f0d080':'#e2e6ef'};margin-bottom:10px;box-shadow:${isOutstanding?'0 2px 8px rgba(184,148,42,0.15)':'0 2px 6px rgba(0,0,0,0.05)'};${isOutstanding?'border-left:4px solid '+GOLD+';':''}">
 <tr>
   <td style="padding:0;width:72px;vertical-align:top;border-right:1px solid #eee;">${imgTag}</td>
   <td style="${F}padding:13px 15px;vertical-align:top;">
