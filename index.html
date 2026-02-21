@@ -216,7 +216,7 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
   <div class="game-notes-section" id="jb-quotes-section" style="display:none;">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
       <span>🎙 JB Bickerstaff Quotes</span>
-      <button onclick="fetchJBQuotes()" id="jb-refresh-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;cursor:pointer;">↺ Refresh</button>
+      <button onclick="fetchJBQuotes()" id="jb-refresh-btn" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;cursor:pointer;">↺ Refresh</button>
     </div>
     <div id="jb-quotes-output" style="margin-top:10px;"></div>
   </div>
@@ -233,8 +233,8 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
 <div id="preview-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:100;overflow-y:auto;padding:24px;">
   <div style="max-width:700px;margin:0 auto;">
     <div style="display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;position:sticky;top:0;background:rgba(0,0,0,0.9);padding:12px 0;">
-      <button onclick="copyPreview()" style="background:#C8102E;color:#fff;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Copy HTML</button>
-      <button onclick="document.getElementById('preview-modal').style.display='none'" style="background:#222;color:#aaa;border:1px solid #444;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Close</button>
+      <button onclick="copyPreview()" style="background:#C8102E;color:#fff;border:none;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Copy HTML</button>
+      <button onclick="document.getElementById('preview-modal').style.display='none'" style="background:#222;color:#aaa;border:1px solid #444;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 20px;cursor:pointer;">Close</button>
       <span id="preview-copy-msg" style="color:#4caf50;font-size:13px;display:none;">Copied!</span>
     </div>
     <textarea id="preview-html-output" style="width:100%;height:160px;font-family:monospace;font-size:11px;border:1px solid #333;padding:12px;background:#111;color:#ccc;resize:vertical;margin-bottom:16px;box-sizing:border-box;"></textarea>
@@ -1120,9 +1120,7 @@ async function fetchJBQuotes() {
         // Remove scripts/styles
         tmp.querySelectorAll('script,style,nav,footer,header').forEach(e => e.remove());
         const text = tmp.innerText || tmp.textContent || '';
-        combinedText += text.slice(0, 3000) + '
-
-';
+        combinedText += text.slice(0, 3000) + ' ';
       } catch(e) { continue; }
     }
 
@@ -1161,7 +1159,7 @@ ${combinedText.slice(0, 8000)}`
       out.innerHTML = quotes.map(q => `
         <div style="border-left:3px solid var(--red);padding:10px 14px;margin-bottom:12px;background:var(--bg);">
           <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic;">"${q.quote}"</div>
-          ${q.context ? `<div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
+          ${q.context ? `<div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
         </div>
       `).join('');
     }
@@ -1433,49 +1431,49 @@ renderPlayers();
     <div style="width:300px;min-width:300px;background:#0f0f0f;border-right:1px solid #1c1c1c;padding:24px 20px;overflow-y:auto;height:100vh;">
       
       <div style="display:flex;gap:10px;margin-bottom:24px;align-items:center;">
-        <button onclick="document.getElementById('image-card-modal').style.display='none'" style="background:#1a1a1a;color:#666;border:1px solid #222;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;cursor:pointer;">← Back</button>
+        <button onclick="document.getElementById('image-card-modal').style.display='none'" style="background:#1a1a1a;color:#666;border:1px solid #222;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;cursor:pointer;">← Back</button>
       </div>
 
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#C8102E;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#C8102E;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
         <span style="display:inline-block;width:18px;height:3px;background:#C8102E;"></span>Card Generator
       </div>
 
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a;">Photo</div>
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Image URL</label>
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a;">Photo</div>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Image URL</label>
       <input type="url" id="ic2-url" placeholder="Paste photo URL…" oninput="updateCard()"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
+        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
 
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a;">Text</div>
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a;">Text</div>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Tag <span style="color:#2a2a2a;font-weight:400;letter-spacing:0">(small top label)</span></label>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Tag <span style="color:#2a2a2a;font-weight:400;letter-spacing:0">(small top label)</span></label>
       <input type="text" id="ic2-tag" placeholder="DET VS NYK · FEB 20" oninput="updateCard()" maxlength="40"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
+        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Headline</label>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Headline</label>
       <input type="text" id="ic2-headline" placeholder="CADE DROPS 42" oninput="updateCard()" maxlength="30"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;outline:none;margin-bottom:12px;">
+        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;outline:none;margin-bottom:12px;">
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Stats / Subtext</label>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Stats / Subtext</label>
       <input type="text" id="ic2-sub" placeholder="42 PTS · 13 AST · 8 REB" oninput="updateCard()" maxlength="60"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
+        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;">
 
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a;">Design</div>
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #1a1a1a;">Design</div>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Headline Size</label>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Headline Size</label>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <input type="range" id="ic2-size" min="36" max="120" value="80" oninput="updateCard()" style="flex:1;accent-color:#C8102E;cursor:pointer;">
-        <span id="ic2-size-val" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#C8102E;min-width:36px;text-align:right;">80</span>
+        <span id="ic2-size-val" style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:#C8102E;min-width:36px;text-align:right;">80</span>
       </div>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Text Align</label>
-      <select id="ic2-align" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Text Align</label>
+      <select id="ic2-align" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
         <option value="left">Left</option>
         <option value="center">Center</option>
         <option value="right">Right</option>
       </select>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Gradient Direction</label>
-      <select id="ic2-grad" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Gradient Direction</label>
+      <select id="ic2-grad" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
         <option value="to top">Bottom → up</option>
         <option value="135deg">Diagonal ↗</option>
         <option value="225deg">Diagonal ↙</option>
@@ -1483,13 +1481,13 @@ renderPlayers();
         <option value="to left">Right → left</option>
       </select>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Gradient Darkness</label>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Gradient Darkness</label>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <input type="range" id="ic2-dark" min="20" max="100" value="85" oninput="updateCard()" style="flex:1;accent-color:#C8102E;cursor:pointer;">
-        <span id="ic2-dark-val" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#C8102E;min-width:36px;text-align:right;">85%</span>
+        <span id="ic2-dark-val" style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:#C8102E;min-width:36px;text-align:right;">85%</span>
       </div>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Accent Color</label>
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Accent Color</label>
       <div id="ic2-colors" style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <div class="ic2-color active" data-color="#C8102E" style="width:30px;height:30px;border-radius:50%;background:#C8102E;border:2px solid #fff;cursor:pointer;" onclick="setCardColor(this)"></div>
         <div class="ic2-color" data-color="#ffffff" style="width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid transparent;cursor:pointer;" onclick="setCardColor(this)"></div>
@@ -1499,16 +1497,16 @@ renderPlayers();
         <div class="ic2-color" data-color="#06d6a0" style="width:30px;height:30px;border-radius:50%;background:#06d6a0;border:2px solid transparent;cursor:pointer;" onclick="setCardColor(this)"></div>
       </div>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Format</label>
-      <select id="ic2-ratio" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Format</label>
+      <select id="ic2-ratio" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
         <option value="1/1">1:1 — Square (Facebook)</option>
         <option value="4/5">4:5 — Portrait (Feed)</option>
         <option value="16/9">16:9 — Wide</option>
         <option value="9/16">9:16 — Story / Reel</option>
       </select>
 
-      <label style="display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Pistons Logo</label>
-      <select id="ic2-logo" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
+      <label style="display:block;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#444;margin-bottom:5px;">Pistons Logo</label>
+      <select id="ic2-logo" onchange="updateCard()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:Barlow Condensed,sans-serif;font-size:14px;outline:none;margin-bottom:12px;cursor:pointer;">
         <option value="none">None</option>
         <option value="show">Top right corner</option>
       </select>
@@ -1517,38 +1515,38 @@ renderPlayers();
     <!-- MIDDLE: Quotes panel -->
     <div style="width:320px;min-width:320px;background:#0a0a0a;border-right:1px solid #1c1c1c;display:flex;flex-direction:column;height:100vh;overflow:hidden;">
       <div style="padding:16px 18px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#C8102E;">🎙 Quotes</div>
-        <button id="ic-quotes-btn" onclick="loadQuotesForCard()" style="background:#1a1a1a;border:1px solid #222;color:#555;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='#999'" onmouseout="this.style.color='#555'">Load Quotes</button>
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#C8102E;">🎙 Quotes</div>
+        <button id="ic-quotes-btn" onclick="loadQuotesForCard()" style="background:#1a1a1a;border:1px solid #222;color:#555;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='#999'" onmouseout="this.style.color='#555'">Load Quotes</button>
       </div>
       <div id="ic-quotes-list" style="flex:1;overflow-y:auto;padding:14px 16px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;text-align:center;margin-top:40px;line-height:2;">Click Load Quotes<br>to fetch recent<br>JB & player quotes</div>
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;text-align:center;margin-top:40px;line-height:2;">Click Load Quotes<br>to fetch recent<br>JB & player quotes</div>
       </div>
     </div>
 
     <!-- RIGHT: Card preview -->
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:40px 32px;overflow-y:auto;background:#080808;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1e1e1e;margin-bottom:20px;align-self:flex-start;">Screenshot the card below ↓</div>
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1e1e1e;margin-bottom:20px;align-self:flex-start;">Screenshot the card below ↓</div>
 
       <div id="ic2-card" style="width:560px;position:relative;overflow:hidden;background:#111;box-shadow:0 40px 120px rgba(0,0,0,0.9),0 0 0 1px #1a1a1a;">
         <div id="ic2-bg" style="width:100%;aspect-ratio:1/1;display:block;"></div>
         <img id="ic2-photo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;object-position:center top;position:absolute;inset:0;">
         <div id="ic2-error" style="display:none;position:absolute;inset:0;background:#111;align-items:center;justify-content:center;flex-direction:column;gap:10px;">
           <div style="font-size:28px;">🚫</div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;text-align:center;line-height:1.8;">Image blocked by source<br><span style="color:#2a2a2a;">Try a different URL or upload to Imgur</span></div>
+          <div style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;text-align:center;line-height:1.8;">Image blocked by source<br><span style="color:#2a2a2a;">Try a different URL or upload to Imgur</span></div>
         </div>
         <div id="ic2-gradient" style="position:absolute;inset:0;pointer-events:none;"></div>
         <div id="ic2-logo-wrap" style="position:absolute;top:20px;right:24px;display:none;">
           <img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" style="width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 2px 12px rgba(0,0,0,0.7));">
         </div>
         <div id="ic2-content" style="position:absolute;bottom:0;left:0;right:0;padding:32px 36px;">
-          <div id="ic2-tag-el" style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;color:#C8102E;display:none;"></div>
-          <div id="ic2-hl-el" style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-style:italic;color:#fff;text-transform:uppercase;line-height:0.88;letter-spacing:-1px;text-shadow:0 4px 40px rgba(0,0,0,0.8);font-size:80px;"></div>
+          <div id="ic2-tag-el" style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;color:#C8102E;display:none;"></div>
+          <div id="ic2-hl-el" style="font-family:Barlow Condensed,sans-serif;font-weight:900;font-style:italic;color:#fff;text-transform:uppercase;line-height:0.88;letter-spacing:-1px;text-shadow:0 4px 40px rgba(0,0,0,0.8);font-size:80px;"></div>
           <div id="ic2-bar-el" style="height:3px;background:#C8102E;margin:14px 0;width:52px;display:none;"></div>
-          <div id="ic2-sub-el" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;text-transform:uppercase;display:none;color:#C8102E;"></div>
+          <div id="ic2-sub-el" style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;text-transform:uppercase;display:none;color:#C8102E;"></div>
         </div>
       </div>
 
-      <div style="margin-top:24px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1e1e1e;text-align:center;line-height:1.8;">
+      <div style="margin-top:24px;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#1e1e1e;text-align:center;line-height:1.8;">
         Take a screenshot of the card above<br>
         <span style="color:#2a2a2a;">Cmd + Shift + 4</span> on Mac &nbsp;·&nbsp; <span style="color:#2a2a2a;">Win + Shift + S</span> on Windows
       </div>
@@ -1569,7 +1567,7 @@ async function loadQuotesForCard() {
   const list = document.getElementById('ic-quotes-list');
   btn.textContent = '⏳ Loading…';
   btn.disabled = true;
-  list.innerHTML = '<div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Fetching articles…</div>';
+  list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Fetching articles…</div>`;
 
   try {
     // Get last 5 completed Pistons games from scheduleGames
@@ -1579,7 +1577,7 @@ async function loadQuotesForCard() {
     }).slice(0, 5); // newest 5
 
     if (!completedGames.length) {
-      list.innerHTML = '<div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No recent games found.<br>Select a game first.</div>';
+      list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No recent games found.<br>Select a game first.</div>`;
       btn.textContent = 'Load Quotes'; btn.disabled = false; return;
     }
 
@@ -1649,35 +1647,35 @@ ${combinedText.slice(0,7000)}`
     }
 
     if (!allGameQuotes.length) {
-      list.innerHTML = '<div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No quotes found<br>in recent articles.</div>';
+      list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No quotes found<br>in recent articles.</div>`;
       btn.textContent = 'Load Quotes'; btn.disabled = false; return;
     }
 
     // Render grouped by game
     list.innerHTML = allGameQuotes.map(g => `
       <div style="margin-bottom:20px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;padding-bottom:6px;border-bottom:1px solid #1a1a1a;margin-bottom:10px;">
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;padding-bottom:6px;border-bottom:1px solid #1a1a1a;margin-bottom:10px;">
           ${g.gameDate} vs ${g.oppName} <span style="color:${g.detWon?'#22c55e':'#ef4444'};margin-left:6px;">${g.detWon?'W':'L'}</span>
         </div>
         ${g.quotes.map(q => `
           <div style="margin-bottom:12px;padding:10px 12px;background:#111;border-left:2px solid #C8102E;cursor:pointer;transition:background 0.15s;"
                onclick="copyQuoteToCard(this)"
                title="Click to copy to headline">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">${q.speaker}</div>
+            <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">${q.speaker}</div>
             <div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">"${q.quote}"</div>
-            ${q.context ? `<div style="font-size:10px;color:#333;margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
+            ${q.context ? `<div style="font-size:10px;color:#333;margin-top:4px;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
             <div style="margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a;">
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;margin-bottom:3px;">🇵🇱 Polski</div>
+              <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;margin-bottom:3px;">🇵🇱 Polski</div>
               <div style="font-size:11px;color:#555;line-height:1.5;font-style:italic;">"${q.polish}"</div>
             </div>
-            <div style="margin-top:6px;font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;">Click to copy →</div>
+            <div style="margin-top:6px;font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;">Click to copy →</div>
           </div>
         `).join('')}
       </div>
     `).join('');
 
   } catch(e) {
-    list.innerHTML = `<div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#444;margin-top:20px;text-align:center;">${e.message}</div>`;
+    list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#444;margin-top:20px;text-align:center;">${e.message}</div>`;
   }
   btn.textContent = '↺ Reload'; btn.disabled = false;
 }
