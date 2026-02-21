@@ -1138,8 +1138,12 @@ async function buildPreviewHTML() {
 
   // Last 5 games form — from schedule data (already loaded)
   const getLast5 = (targetAbb) => {
-    // Use idx directly — indexOf can fail if object reference differs
     const before = scheduleGames.slice(0, idx);
+    if (targetAbb === 'DET') {
+      const sample = before[before.length-1];
+      const st = sample?.competitions?.[0]?.status?.type;
+      console.log('last5 sample status:', JSON.stringify(st), 'completed:', st?.completed, 'state:', st?.state);
+    }
     const completedBefore = before.filter(e => {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
