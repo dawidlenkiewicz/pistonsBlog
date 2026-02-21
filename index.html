@@ -1600,20 +1600,26 @@ async function loadQuotesForCard() {
         if (!news.length) continue;
 
         // Fetch first 2 articles
+        console.log('Game:', oppName, 'news count:', news.length, 'first article:', JSON.stringify(news[0]).slice(0,200));
         let combinedText = '';
         for (const article of news.slice(0, 2)) {
           const url = article.links?.web?.href || article.link;
-          if (!url) continue;
+          console.log('Article URL:', url);
+          if (!url) { console.log('No URL found'); continue; }
           try {
             const ar = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+            console.log('Fetch status:', ar.status);
             if (!ar.ok) continue;
             const html = await ar.text();
             const tmp = document.createElement('div');
             tmp.innerHTML = html;
             tmp.querySelectorAll('script,style,nav,footer,header').forEach(e=>e.remove());
-            combinedText += (tmp.innerText||'').slice(0,3000) + ' ';
-          } catch(e) { continue; }
+            const extracted = (tmp.innerText||'').slice(0,3000);
+            console.log('Extracted text sample:', extracted.slice(0,300));
+            combinedText += extracted + ' ';
+          } catch(e) { console.log('Fetch error:', e.message); continue; }
         }
+        console.log('combinedText length:', combinedText.length);
 
         if (!combinedText.trim()) continue;
 
