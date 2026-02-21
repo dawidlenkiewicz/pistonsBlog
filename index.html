@@ -1570,11 +1570,14 @@ async function loadQuotesForCard() {
   list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Fetching articles…</div>`;
 
   try {
+    console.log('scheduleGames total:', scheduleGames.length);
     // Get last 5 completed Pistons games from scheduleGames
     const completedGames = scheduleGames.filter(e => {
       const st = e.competitions?.[0]?.status?.type;
       return st?.completed === true || st?.state === 'post';
     }).slice(0, 5); // newest 5
+
+    console.log('completedGames:', completedGames.length, completedGames.map(e=>e.date));
 
     if (!completedGames.length) {
       list.innerHTML = `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No recent games found.<br>Select a game first.</div>`;
