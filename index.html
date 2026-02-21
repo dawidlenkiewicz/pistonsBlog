@@ -1595,26 +1595,26 @@ async function loadQuotesForCard() {
 
       try {
         console.log('Searching quotes for:', gameDateStr, 'vs', oppName);
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyB8L00XmVtgX3Jxq0FEDKTRbM0l56G_Obk';
+        const resp = await fetch(geminiUrl, {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 1500,
-            tools: [{"type":"web_search_20250305","name":"web_search"}],
-            messages: [{
-              role: 'user',
-              content: 'Search for post-game quotes from JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players after their NBA game vs ' + oppName + ' on ' + gameDateStr + '. Then return ONLY a JSON array with no markdown or explanation. Each item must have: speaker, quote, context (1 sentence), polish (Polish translation). Max 5 quotes. If none found return [].'
+            tools: [{"google_search": {}}],
+            contents: [{
+              parts: [{
+                text: 'Search for post-game quotes from JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players after their NBA game vs ' + oppName + ' on ' + gameDateStr + '. Return ONLY a JSON array, no markdown. Each item: {speaker, quote, context, polish}. Max 5. If none return [].'
+              }]
             }]
           })
         });
         const d = await resp.json();
-        console.log('Response blocks:', d.content?.map(c=>c.type));
-        const textBlock = d.content?.filter(c=>c.type==='text').pop();
-        const raw = textBlock?.text || '[]';
-        console.log('Raw:', raw.slice(0,400));
+        console.log('Gemini raw:', JSON.stringify(d).slice(0, 400));
+        const raw = (d.candidates?.[0]?.content?.parts || []).filter(p=>p.text).map(p=>p.text).join('') || '[]';
+        console.log('Raw text:', raw.slice(0, 400));
         let quotes;
         try { quotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+        catch(e) { console.log('Parse error:', e.message, raw.slice(0,200)); quotes = []; }
         catch(e) { quotes = []; }
         if (Array.isArray(quotes) && quotes.length) {
           allGameQuotes.push({ oppName, gameDate, detWon, quotes });
