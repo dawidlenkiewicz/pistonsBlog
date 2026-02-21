@@ -923,10 +923,10 @@ async function fetchBoxScore(gameId, oppAbb) {
     if (!res.ok) throw new Error('Box score error ' + res.status);
     const json = await res.json();
 
-    const boxscores = json.boxscore?.teams || [];
-    // Store team stats for export — team totals are in statistics[1] (index 1 = team stats, 0 = player stats)
+    // Player stats are under boxscore.players, team stats under boxscore.teams
+    const boxscores = json.boxscore?.players || [];
     window._teamStats = {};
-    boxscores.forEach(t => {
+    (json.boxscore?.teams || []).forEach(t => {
       const abb = t.team?.abbreviation;
       if (!abb) return;
       const stats = {};
@@ -1189,16 +1189,19 @@ async function buildPreviewHTML() {
   // Score block — rebuilt after home/away assignment below; init for upcoming games
   let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div><div style="${F}font-size:10px;color:#bbb;letter-spacing:1px;margin-top:4px;">${h2hLabel}</div>`;
 
-  const teamCell = (logo, name, record, standing, last5) => `
+  const teamCell = (logo, name, record, standing, last5) => {
+    const dotsHtml = (last5 && last5.length) ? last5.map(r =>
+      `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${r==='W'?'#22c55e':'#ef4444'};"></span>`
+    ).join('') : '';
+    return `
     <div style="text-align:center;width:140px;flex-shrink:0;">
       <img src="${logo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 8px;">
       <div style="${F}font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;margin-bottom:3px;line-height:1.3;">${name}</div>
       ${record ? `<div style="${F}font-size:11px;font-weight:600;color:#999;">${record}</div>` : ''}
       ${standing ? `<div style="${F}font-size:10px;color:#bbb;margin-top:1px;">${standing}</div>` : ''}
-      ${last5?.length ? `<div style="margin-top:8px;display:flex;justify-content:center;gap:3px;align-items:center;">
-        ${last5.map(r => `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${r==='W'?'#22c55e':'#ef4444'};"></span>`).join('')}
-      </div>` : ''}
+      ${dotsHtml ? `<div style="margin-top:8px;display:flex;justify-content:center;gap:3px;align-items:center;">${dotsHtml}</div>` : ''}
     </div>`;
+  };
 
   // Home team always on RIGHT, away on LEFT
   const homeTeam = isHome
