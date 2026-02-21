@@ -1515,12 +1515,22 @@ renderPlayers();
 
     <!-- MIDDLE: Quotes panel -->
     <div style="width:320px;min-width:320px;background:#0a0a0a;border-right:1px solid #1c1c1c;display:flex;flex-direction:column;height:100vh;overflow:hidden;">
-      <div style="padding:16px 18px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-        <div style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#C8102E;">🎙 Quotes</div>
-        <button id="ic-quotes-btn" onclick="loadQuotesForCard()" style="background:#1a1a1a;border:1px solid #222;color:#555;font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.color='#999'" onmouseout="this.style.color='#555'">Load Quotes</button>
+      <div style="padding:16px 18px;border-bottom:1px solid #1a1a1a;flex-shrink:0;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#C8102E;margin-bottom:12px;">🎙 Quote Translator</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#333;margin-bottom:6px;">Speaker</div>
+        <input id="ic-q-speaker" type="text" placeholder="JB Bickerstaff"
+          style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;outline:none;margin-bottom:10px;box-sizing:border-box;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#333;margin-bottom:6px;">English Quote</div>
+        <textarea id="ic-q-text" placeholder="Paste quote here..."
+          style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;resize:none;height:90px;box-sizing:border-box;line-height:1.5;"></textarea>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#333;margin-bottom:6px;margin-top:10px;">Game Context</div>
+        <input id="ic-q-context" type="text" placeholder="vs Knicks, Feb 20"
+          style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:8px 10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;">
+        <button onclick="triggerTranslation()" id="ic-translate-btn"
+          style="width:100%;background:#C8102E;border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 0;cursor:pointer;">Translate to Polish</button>
       </div>
       <div id="ic-quotes-list" style="flex:1;overflow-y:auto;padding:14px 16px;">
-        <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;text-align:center;margin-top:40px;line-height:2;">Click Load Quotes<br>to fetch recent<br>JB & player quotes</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;text-align:center;margin-top:40px;line-height:2;">Paste a quote above<br>and click Translate</div>
       </div>
     </div>
 
@@ -1563,108 +1573,96 @@ function openImageCard() {
   updateCard();
 }
 
-async function loadQuotesForCard() {
-  const btn = document.getElementById('ic-quotes-btn');
-  const list = document.getElementById('ic-quotes-list');
-  btn.textContent = '⏳ Loading…';
+function translateQuote() {
+  // live preview as user types — just update the card subtext
+  const text = document.getElementById('ic-q-text').value.trim();
+  if (text) {
+    document.getElementById('ic2-sub').value = text.slice(0, 60);
+    updateCard();
+  }
+}
+
+async function triggerTranslation() {
+  const speaker = document.getElementById('ic-q-speaker').value.trim();
+  const text    = document.getElementById('ic-q-text').value.trim();
+  const context = document.getElementById('ic-q-context').value.trim();
+  const list    = document.getElementById('ic-quotes-list');
+  const btn     = document.getElementById('ic-translate-btn');
+
+  if (!text) {
+    list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#444;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Paste a quote first</div>';
+    return;
+  }
+
+  btn.textContent = '⏳ Translating…';
   btn.disabled = true;
-  list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Searching for quotes…</div>';
+  list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;color:#333;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">Translating…</div>';
 
   try {
-    console.log('RAW scheduleGames:', typeof scheduleGames, Array.isArray(scheduleGames), scheduleGames?.length);
-    console.log('window.scheduleGames:', typeof window.scheduleGames, window.scheduleGames?.length);
-    const completedGames = (window.scheduleGames||[]).filter(e => {
-      const st = e.competitions?.[0]?.status?.type;
-      return st?.completed === true || st?.state === 'post';
-    }).slice(0, 5);
-
-    if (!completedGames.length) {
-      list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;">No recent games found.</div>';
-      btn.textContent = 'Load Quotes'; btn.disabled = false; return;
-    }
-
-    const allGameQuotes = [];
-
-    // Build game list for single batched API call
-    const gameList = completedGames.map(game => {
-      const opp = game.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
-      const oppName = opp?.team?.shortDisplayName || opp?.team?.displayName || 'opponent';
-      const det = game.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
-      return {
-        gameId: game.id,
-        oppName,
-        detWon: det?.winner,
-        gameDate: new Date(game.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}),
-        gameDateStr: new Date(game.date).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
-      };
+    const resp = await fetch('https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openrouter/auto',
+        messages: [{
+          role: 'user',
+          content: 'Translate this NBA quote to Polish. Return ONLY a JSON object with two keys: "polish" (the translation) and "short" (a punchy 6-word max Polish version for a social media caption). No markdown, no explanation.\n\nQuote: "' + text + '"'
+        }]
+      })
     });
+    const d = await resp.json();
+    const raw = d.choices?.[0]?.message?.content || '{}';
+    console.log('Translation raw:', raw);
+    let result;
+    try { result = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) { result = { polish: raw, short: '' }; }
 
-    console.log('Games to search:', gameList.map(g=>g.oppName));
+    const polish = result.polish || raw;
+    const short  = result.short || '';
 
-    const prompt = 'These Detroit Pistons NBA games have already been played in the 2025-26 season. Search your knowledge for any real post-game quotes from JB Bickerstaff (head coach) or Pistons players after these games:\n' +
-      gameList.map((g,i) => (i+1) + '. Detroit Pistons vs ' + g.oppName + ' - ' + g.gameDateStr).join('\n') +
-      '\n\nFor each game you find real quotes for, return them in this JSON array format. Each item: {"game":"vs OPPONENT","speaker":"Name","quote":"exact quote","context":"brief context","polish":"Polish translation"}. Max 3 quotes per game. Only include quotes you are genuinely confident about - do not fabricate. If you cannot find real quotes for a game, skip it entirely. Return ONLY the JSON array with no markdown or explanation.';
+    list.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;margin-bottom:8px;">${context || 'Quote'}</div>
 
-    try {
-      console.log('Sending batched request...');
-      const resp = await fetch('https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'openrouter/auto',
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const d = await resp.json();
-      console.log('OpenRouter status:', resp.status, JSON.stringify(d).slice(0,300));
-      const raw = d.choices?.[0]?.message?.content || '[]';
-      console.log('Raw:', raw.slice(0,600));
-      let allQuotes;
-      try { allQuotes = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-      catch(e) { console.log('Parse error:', e.message); allQuotes = []; }
-
-      // Group by game
-      if (Array.isArray(allQuotes) && allQuotes.length) {
-        for (const g of gameList) {
-          const gQuotes = allQuotes.filter(q => q.game && q.game.toLowerCase().includes(g.oppName.toLowerCase()));
-          if (gQuotes.length) allGameQuotes.push({ oppName: g.oppName, gameDate: g.gameDate, detWon: g.detWon, quotes: gQuotes });
-        }
-        // If grouping failed, just show all under first game
-        if (!allGameQuotes.length) {
-          allGameQuotes.push({ oppName: 'Recent Games', gameDate: '', detWon: null, quotes: allQuotes });
-        }
-      }
-    } catch(e) { console.log('Batch error:', e.message); }
-
-        if (!allGameQuotes.length) {
-      list.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;color:#444;text-align:center;margin-top:30px;letter-spacing:2px;text-transform:uppercase;">No quotes found.</div>';
-      btn.textContent = '↺ Reload'; btn.disabled = false; return;
-    }
-
-    list.innerHTML = allGameQuotes.map(g => `
-      <div style="margin-bottom:20px;">
-        <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;padding-bottom:6px;border-bottom:1px solid #1a1a1a;margin-bottom:10px;">
-          ${g.gameDate} vs ${g.oppName} <span style="color:${g.detWon?'#22c55e':'#ef4444'};margin-left:6px;">${g.detWon?'W':'L'}</span>
+        <div style="background:#111;border-left:2px solid #C8102E;padding:10px 12px;margin-bottom:10px;">
+          ${speaker ? `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">${speaker}</div>` : ''}
+          <div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">"${text}"</div>
         </div>
-        ${g.quotes.map(q => `
-          <div style="margin-bottom:12px;padding:10px 12px;background:#111;border-left:2px solid #C8102E;cursor:pointer;" onclick="copyQuoteToCard(this)" title="Click to copy to card">
-            <div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">${q.speaker}</div>
-            <div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">"${q.quote}"</div>
-            ${q.context ? `<div style="font-size:10px;color:#333;margin-top:4px;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
-            <div style="margin-top:8px;padding-top:8px;border-top:1px solid #1a1a1a;">
-              <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;margin-bottom:3px;">🇵🇱 Polski</div>
-              <div style="font-size:11px;color:#555;line-height:1.5;font-style:italic;">"${q.polish}"</div>
-            </div>
-            <div style="margin-top:6px;font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#2a2a2a;">Click to copy →</div>
-          </div>
-        `).join('')}
-      </div>
-    `).join('');
 
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">🇵🇱 Polski</div>
+        <div style="background:#111;border-left:2px solid #333;padding:10px 12px;margin-bottom:10px;cursor:pointer;" onclick="useOnCard('${polish.replace(/'/g,"\'")}', 'pl')" title="Click to use on card">
+          <div style="font-size:12px;color:#888;line-height:1.5;font-style:italic;">"${polish}"</div>
+          <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>
+        </div>
+
+        ${short ? `
+        <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">⚡ Short version</div>
+        <div style="background:#111;border-left:2px solid #333;padding:10px 12px;cursor:pointer;" onclick="useOnCard('${short.replace(/'/g,"\'")}', 'short')" title="Click to use on card">
+          <div style="font-size:13px;color:#888;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${short}</div>
+          <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>
+        </div>` : ''}
+      </div>
+    `;
   } catch(e) {
     list.innerHTML = '<div style="color:#444;font-size:11px;margin-top:20px;text-align:center;">' + e.message + '</div>';
   }
-  btn.textContent = '↺ Reload'; btn.disabled = false;
+
+  btn.textContent = 'Translate to Polish';
+  btn.disabled = false;
+}
+
+function useOnCard(text, type) {
+  if (type === 'short') {
+    document.getElementById('ic2-headline').value = text.slice(0,30).toUpperCase();
+    updateCard();
+  } else {
+    document.getElementById('ic2-sub').value = text.slice(0,60);
+    updateCard();
+  }
+  // flash feedback
+  const card = document.getElementById('ic2-card');
+  card.style.outline = '2px solid #C8102E';
+  setTimeout(() => card.style.outline = 'none', 600);
 }
 
 
