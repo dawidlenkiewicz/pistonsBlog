@@ -1189,17 +1189,15 @@ async function buildPreviewHTML() {
   // Score block — rebuilt after home/away assignment below; init for upcoming games
   let scoreBlock = `<div style="${F}font-size:13px;font-weight:700;color:#555;letter-spacing:1px;text-transform:uppercase;">${fmtDate(event.date)}</div><div style="${F}font-size:10px;color:#bbb;letter-spacing:1px;margin-top:4px;">${h2hLabel}</div>`;
 
-  const formDots = (results) => results.map(r =>
-    `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${r==='W'?'#22c55e':'#ef4444'};margin:0 2px;"></span>`
-  ).join('');
-
   const teamCell = (logo, name, record, standing, last5) => `
-    <div style="text-align:center;min-width:100px;">
+    <div style="text-align:center;width:140px;flex-shrink:0;">
       <img src="${logo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 8px;">
-      <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#111;margin-bottom:3px;">${name}</div>
+      <div style="${F}font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;margin-bottom:3px;line-height:1.3;">${name}</div>
       ${record ? `<div style="${F}font-size:11px;font-weight:600;color:#999;">${record}</div>` : ''}
       ${standing ? `<div style="${F}font-size:10px;color:#bbb;margin-top:1px;">${standing}</div>` : ''}
-      ${last5?.length ? `<div style="margin-top:8px;">${formDots(last5)}</div>` : ''}
+      ${last5?.length ? `<div style="margin-top:8px;display:flex;justify-content:center;gap:3px;align-items:center;">
+        ${last5.map(r => `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${r==='W'?'#22c55e':'#ef4444'};"></span>`).join('')}
+      </div>` : ''}
     </div>`;
 
   // Home team always on RIGHT, away on LEFT
@@ -1225,7 +1223,7 @@ async function buildPreviewHTML() {
   }
 
   const scoreboard = `
-  <div style="${F}background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+  <div style="${F}background:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:center;gap:0;border-bottom:3px solid ${RED};box-shadow:0 2px 8px rgba(0,0,0,0.07);">
     ${teamCell(awayTeam.logo, awayTeam.name, awayTeam.record, awayTeam.standing, awayTeam.last5)}
     <div style="text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">${scoreBlock}</div>
     ${teamCell(homeTeam.logo, homeTeam.name, homeTeam.record, homeTeam.standing, homeTeam.last5)}
