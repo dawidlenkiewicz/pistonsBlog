@@ -1140,9 +1140,9 @@ async function buildPreviewHTML() {
   const getLast5 = (targetAbb) => {
     const before = scheduleGames.slice(0, idx);
     if (targetAbb === 'DET') {
-      const sample = before[before.length-1];
-      const st = sample?.competitions?.[0]?.status?.type;
-      console.log('last5 sample status:', JSON.stringify(st), 'completed:', st?.completed, 'state:', st?.state);
+      console.log('before length:', before.length, 'first date:', before[0]?.date, 'last date:', before[before.length-1]?.date);
+      const states = before.map(e => e.competitions?.[0]?.status?.type?.state);
+      console.log('states:', states.join(','));
     }
     const completedBefore = before.filter(e => {
       const st = e.competitions?.[0]?.status?.type;
