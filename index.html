@@ -923,7 +923,6 @@ async function fetchBoxScore(gameId, oppAbb) {
     if (!res.ok) throw new Error('Box score error ' + res.status);
     const json = await res.json();
 
-    console.log('boxscore teams len:', json.boxscore?.teams?.length, 'keys:', Object.keys(json.boxscore||{}));
     const boxscores = json.boxscore?.teams || [];
     // Store team stats for export — team totals are in statistics[1] (index 1 = team stats, 0 = player stats)
     window._teamStats = {};
