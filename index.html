@@ -1167,7 +1167,7 @@ async function buildPreviewHTML() {
     if (d?.winner) detH2HWins++; else oppH2HWins++;
   });
   const h2hLabel = h2hGames.length
-    ? \`Season series: DET \${detH2HWins}–\${oppH2HWins}\`
+    ? `Season series: DET ${detH2HWins}–${oppH2HWins}`
     : 'First meeting this season';
 
   // Score block — rebuilt after home/away assignment below; init for upcoming games
