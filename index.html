@@ -599,8 +599,8 @@ function buildExportHTML() {
 
     const imgSrc = getCachedPhoto(p.espnId) || `https://a.espncdn.com/i/headshots/nba/players/full/${p.espnId}.png`;
     const imgTag = `<img src="${imgSrc}"
-      width="72" height="90"
-      style="display:block;width:72px;height:90px;object-fit:cover;object-position:top center;">`;
+      width="90" height="110"
+      style="display:block;width:90px;height:110px;object-fit:cover;object-position:top center;">`;
 
     return `
 <table style="${F}width:100%;border-collapse:collapse;background:${isOutstanding?GOLD_BG:'#fff'};border:1px solid ${isOutstanding?'#f0d080':'#e2e6ef'};margin-bottom:10px;box-shadow:${isOutstanding?'0 2px 8px rgba(184,148,42,0.15)':'0 2px 6px rgba(0,0,0,0.05)'};${isOutstanding?'border-left:4px solid '+GOLD+';':''}">
@@ -641,7 +641,7 @@ ${(()=>{
 
   return `<div style="${F}background:#fff;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
   <div style="text-align:center;min-width:100px;">
-    <img src="${leftLogo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
+    <img src="${leftLogo}" width="130" height="130" style="display:block;object-fit:contain;margin:0 auto 6px;">
     <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${leftName}</div>
   </div>
   <div style="text-align:center;flex:1;">
@@ -652,7 +652,7 @@ ${(()=>{
     <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
   </div>
   <div style="text-align:center;min-width:100px;">
-    <img src="${rightLogo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 6px;">
+    <img src="${rightLogo}" width="130" height="130" style="display:block;object-fit:contain;margin:0 auto 6px;">
     <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${rightName}</div>
   </div>
 </div>`;
@@ -1216,7 +1216,7 @@ async function buildPreviewHTML() {
     ).join('') : '';
     return `
     <div style="text-align:center;width:140px;flex-shrink:0;">
-      <img src="${logo}" width="84" height="84" style="display:block;object-fit:contain;margin:0 auto 8px;">
+      <img src="${logo}" width="130" height="130" style="display:block;object-fit:contain;margin:0 auto 8px;">
       <div style="${F}font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#111;margin-bottom:3px;line-height:1.3;">${name}</div>
       ${record ? `<div style="${F}font-size:11px;font-weight:600;color:#999;">${record}</div>` : ''}
       ${standing ? `<div style="${F}font-size:10px;color:#bbb;margin-top:1px;">${standing}</div>` : ''}
