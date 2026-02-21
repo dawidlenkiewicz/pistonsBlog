@@ -647,7 +647,7 @@ ${(()=>{
   </div>
   <div style="text-align:center;flex:1;">
     <div style="${F}font-size:68px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
-      <span style="color:#bbb;">${leftScore}</span><span style="color:#ddd;margin:0 6px;">:</span><span style="color:${RED};">${rightScore}</span>
+      <span style="color:${parseInt(leftScore)>parseInt(rightScore)?RED:'#bbb'};">${leftScore}</span><span style="color:#ddd;margin:0 6px;">:</span><span style="color:${parseInt(rightScore)>parseInt(leftScore)?RED:'#bbb'};">${rightScore}</span>
     </div>
     <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${sbMeta}</div>
     <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
