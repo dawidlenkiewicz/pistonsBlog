@@ -1162,9 +1162,9 @@ async function buildPreviewHTML() {
   // For opponent: fetch last 30 days of ALL NBA games, find opp's last 5
   let oppLast5 = [];
   try {
-    const gameDate = new Date(event.date);
-    const from = new Date(gameDate); from.setDate(from.getDate() - 35);
-    const to   = new Date(gameDate); to.setDate(to.getDate() - 1);
+    const today = new Date();
+    const to   = new Date(Math.min(today, new Date(event.date) - 86400000)); // earlier of today or day before game
+    const from = new Date(to); from.setDate(from.getDate() - 35);
     const fmt  = d => d.toISOString().slice(0,10).replace(/-/g,'');
     const url  = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${fmt(from)}-${fmt(to)}&limit=500`;
     const r = await fetch(url);
