@@ -1599,7 +1599,7 @@ async function loadQuotesForCard() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'meta-llama/llama-3.3-70b-instruct:free',
+            model: 'google/gemma-3-27b-it:free',
             messages: [{
               role: 'user',
               content: 'What did JB Bickerstaff (Detroit Pistons head coach) and Detroit Pistons players say in post-game interviews after the NBA game vs ' + oppName + ' on ' + gameDateStr + '? Return ONLY a JSON array, no markdown, no explanation. Each item: {"speaker":"Name","quote":"exact quote","context":"1 sentence context","polish":"Polish translation of the quote"}. Max 5 quotes. If you do not know any real quotes from this specific game, return [].'
