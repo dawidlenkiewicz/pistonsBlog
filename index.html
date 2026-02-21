@@ -1617,6 +1617,10 @@ async function loadQuotesForCard() {
 
         if (!combinedText.trim()) continue;
 
+        console.log('=== ARTICLE TEXT for', oppName, '===');
+        console.log(combinedText.slice(0, 2000));
+        console.log('=== END ===');
+
         // Claude API — extract quotes + translate to Polish
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
