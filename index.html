@@ -950,7 +950,7 @@ async function fetchBoxScore(gameId, oppAbb) {
       stats['FG%']  = calcPct('FG')  || stats['FG%'];
       stats['3P%']  = calcPct('3PT') || stats['3P%'];
       stats['FT%']  = calcPct('FT')  || stats['FT%'];
-      console.log('team stats raw', abb, JSON.stringify(stats).slice(0,300));
+      console.log('team stats raw', abb, JSON.stringify(t.statistics).slice(0,600));
       window._teamStats[abb] = stats;
     });
 
