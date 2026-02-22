@@ -588,15 +588,13 @@ function buildExportHTML() {
     const GOLD_BG = '#fffbf0';
     const GOLD_CHIP_BG = '#fef3c7';
 
-    const mobileKeys = ['PTS','REB','AST','FG%','MIN'];
     const chips = Object.entries(stats).map(([k,v]) => {
       const big = BIG.includes(k);
       const bg = isOutstanding ? (big ? '#fde68a' : GOLD_CHIP_BG) : (big ? '#ffe8eb' : '#f0f1f5');
       const col = isOutstanding ? (big ? GOLD : '#666') : (big ? RED : '#444');
-      const hideOnMobile = mobileKeys.includes(k) ? '' : 'pis-dt';
-      return `<span class="${hideOnMobile}" style="${F}display:inline-block;background:${bg};color:${col};font-size:12px;font-weight:700;padding:4px 8px;white-space:nowrap;">${k}&nbsp;${v}</span>`;
+      return `<span style="${F}display:inline-block;background:${bg};color:${col};font-size:10px;font-weight:700;padding:3px 6px;white-space:nowrap;">${k}&nbsp;${v}</span>`;
     }).join('');
-    const chipsDiv = `<div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>`;
+    const chipsDiv = `<div style="display:flex;flex-wrap:wrap;gap:3px;">${chips}</div>`;
 
     const gradeCell = s.grade
       ? `<td style="padding:12px 14px;vertical-align:middle;text-align:center;border-left:1px solid #eee;white-space:nowrap;width:70px;max-width:70px;">
@@ -638,7 +636,6 @@ function buildExportHTML() {
   }).join('');
 
   return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
-<script>document.addEventListener('DOMContentLoaded',function(){if(window.innerWidth<=520){var els=document.querySelectorAll('.pis-dt');for(var i=0;i<els.length;i++){els[i].style.display='none';}}});<\/script>
 
 <!-- SCOREBOARD -->
 ${(()=>{
@@ -1409,7 +1406,6 @@ async function buildPreviewHTML() {
   </div>`;
 
   return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
-<script>document.addEventListener('DOMContentLoaded',function(){if(window.innerWidth<=520){var els=document.querySelectorAll('.pis-dt');for(var i=0;i<els.length;i++){els[i].style.display='none';}}});<\/script>
     ${scoreboard}
     <div style="padding:0 0 16px;">${injBlock}</div>
   </div>`;
