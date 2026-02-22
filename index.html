@@ -82,7 +82,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Barlow', sans-
 .player-notes-input::placeholder { color: var(--muted); }
 .grade-selector { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
 .grade-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
-.grade-display { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900; color: var(--gold); line-height: 1; min-width: 50px; text-align: center; }
+.grade-display { font-family: 'Barlow Condensed', sans-serif; font-size: 44px; font-weight: 900; color: var(--gold); line-height: 1; min-width: 60px; text-align: center; }
 .grade-input { background: transparent; border: 1px solid var(--border); color: var(--text); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; text-align: center; width: 50px; padding: 3px; outline: none; transition: border-color 0.2s; }
 .grade-input:focus { border-color: var(--gold); }
 .btn-toggle { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 11px; font-family: 'Barlow', sans-serif; font-weight: 600; padding: 4px 10px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
@@ -138,7 +138,7 @@ body { background: var(--dark); color: var(--text); font-family: 'Barlow', sans-
 .theme-c .stat-chip.hi { color: var(--text); }
 .theme-c .stat-chip.hi-red { color: var(--red); font-weight: 900; font-size: 13px; }
 .theme-c .player-bottom-row { display: flex; gap: 10px; align-items: flex-start; }
-.theme-c .grade-display { font-size: 26px; min-width: 44px; }
+.theme-c .grade-display { font-size: 38px; min-width: 54px; }
 .theme-c .grade-input { width: 44px; }
 
 .stat-editor { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 0 4px; border-top: 1px solid var(--border); }
@@ -625,7 +625,7 @@ function buildExportHTML() {
   <div style="display:flex;align-items:stretch;">
     <div style="flex-shrink:0;">${imgTag}</div>
     <div style="${F}flex:1;padding:12px 14px;min-width:0;">
-      <div style="${F}font-size:18px;font-weight:800;color:#111;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+      <div style="${F}font-size:18px;font-weight:800;color:#111;margin-bottom:8px;word-break:break-word;line-height:1.2;">${p.name}</div>
       ${chipsDiv}
     </div>
     ${gradeBig}
