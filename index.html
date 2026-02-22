@@ -588,11 +588,13 @@ function buildExportHTML() {
     const GOLD_BG = '#fffbf0';
     const GOLD_CHIP_BG = '#fef3c7';
 
+    const mobileKeys = ['PTS','REB','AST','FG%','MIN'];
     const chips = Object.entries(stats).map(([k,v]) => {
       const big = BIG.includes(k);
       const bg = isOutstanding ? (big ? '#fde68a' : GOLD_CHIP_BG) : (big ? '#ffe8eb' : '#f0f1f5');
       const col = isOutstanding ? (big ? GOLD : '#666') : (big ? RED : '#444');
-      return `<span style="${F}display:inline-block;background:${bg};color:${col};font-size:12px;font-weight:700;padding:4px 8px;white-space:nowrap;">${k}&nbsp;${v}</span>`;
+      const hideOnMobile = mobileKeys.includes(k) ? '' : 'pis-dt';
+      return `<span class="${hideOnMobile}" style="${F}display:inline-block;background:${bg};color:${col};font-size:12px;font-weight:700;padding:4px 8px;white-space:nowrap;">${k}&nbsp;${v}</span>`;
     }).join('');
     const chipsDiv = `<div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>`;
 
@@ -636,6 +638,7 @@ function buildExportHTML() {
   }).join('');
 
   return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
+<script>document.addEventListener('DOMContentLoaded',function(){if(window.innerWidth<=520){var els=document.querySelectorAll('.pis-dt');for(var i=0;i<els.length;i++){els[i].style.display='none';}}});<\/script>
 
 <!-- SCOREBOARD -->
 ${(()=>{
@@ -656,23 +659,25 @@ ${(()=>{
   const rightLogo = detIsHome ? teamLogos.DET : awayLogo;
   const rightScore= detIsHome ? detScore      : awayScore;
 
-  return `<div style="${F}background:#fff;padding:20px 16px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
-  <style>.sb-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}.sb-team{text-align:center;min-width:80px;flex:1;}.sb-center{text-align:center;flex:0 0 auto;min-width:120px;}.sb-score{font-size:clamp(44px,10vw,68px);font-weight:900;letter-spacing:-3px;line-height:1;color:#111;white-space:nowrap;}@media(max-width:480px){.sb-row{flex-direction:column;align-items:center;gap:12px;}.sb-team{display:flex;align-items:center;gap:12px;width:100%;justify-content:center;}}</style>
-  <div class="sb-row">
-    <div class="sb-team">
-      <img src="${leftLogo}" width="100" height="100" style="display:block;object-fit:contain;margin:0 auto 6px;max-width:100px;">
-      <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${leftName}</div>
+  return `<div style="${F}background:#fff;padding:16px 8px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);box-sizing:border-box;overflow:hidden;">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;">
+    <!-- LEFT TEAM: 22% width -->
+    <div style="flex:0 0 22%;text-align:center;min-width:0;">
+      <img src="${leftLogo}" style="display:block;width:min(18vw,70px);height:min(18vw,70px);object-fit:contain;margin:0 auto 4px;">
+      <div style="${F}font-size:min(2.2vw,9px);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#999;line-height:1.3;word-break:break-word;">${leftName}</div>
     </div>
-    <div class="sb-center">
-      <div class="sb-score">
-        <span style="color:${parseInt(leftScore)>parseInt(rightScore)?RED:'#bbb'};">${leftScore}</span><span style="color:#ddd;margin:0 4px;">:</span><span style="color:${parseInt(rightScore)>parseInt(leftScore)?RED:'#bbb'};">${rightScore}</span>
+    <!-- CENTER SCORE: 56% -->
+    <div style="flex:0 0 56%;text-align:center;min-width:0;">
+      <div style="${F}font-size:min(12vw,60px);font-weight:900;letter-spacing:-1px;line-height:1;white-space:nowrap;">
+        <span style="color:${parseInt(leftScore)>parseInt(rightScore)?RED:'#bbb'};">${leftScore}</span><span style="color:#ddd;margin:0 min(1vw,4px);">:</span><span style="color:${parseInt(rightScore)>parseInt(leftScore)?RED:'#bbb'};">${rightScore}</span>
       </div>
-      <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${sbMeta}</div>
-      <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
+      <div style="${F}font-size:min(2.2vw,9px);color:#999;letter-spacing:1px;text-transform:uppercase;margin:5px 0 7px;">${sbMeta}</div>
+      <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:min(2.2vw,9px);font-weight:700;letter-spacing:1px;padding:4px 10px;text-transform:uppercase;">${badge}</div>
     </div>
-    <div class="sb-team">
-      <img src="${rightLogo}" width="100" height="100" style="display:block;object-fit:contain;margin:0 auto 6px;max-width:100px;">
-      <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${rightName}</div>
+    <!-- RIGHT TEAM: 22% -->
+    <div style="flex:0 0 22%;text-align:center;min-width:0;">
+      <img src="${rightLogo}" style="display:block;width:min(18vw,70px);height:min(18vw,70px);object-fit:contain;margin:0 auto 4px;">
+      <div style="${F}font-size:min(2.2vw,9px);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#999;line-height:1.3;word-break:break-word;">${rightName}</div>
     </div>
   </div>
 </div>`;
@@ -1404,6 +1409,7 @@ async function buildPreviewHTML() {
   </div>`;
 
   return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
+<script>document.addEventListener('DOMContentLoaded',function(){if(window.innerWidth<=520){var els=document.querySelectorAll('.pis-dt');for(var i=0;i<els.length;i++){els[i].style.display='none';}}});<\/script>
     ${scoreboard}
     <div style="padding:0 0 16px;">${injBlock}</div>
   </div>`;
