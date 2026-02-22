@@ -612,20 +612,27 @@ function buildExportHTML() {
       width="90" height="110"
       style="display:block;width:90px;height:110px;object-fit:cover;object-position:top center;">`;
 
+    const gradeBig = s.grade
+      ? `<div style="text-align:center;padding:0 12px;">
+           <div style="${F}font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#bbb;margin-bottom:4px;">Grade</div>
+           <div style="${F}font-size:44px;font-weight:900;color:${RED};line-height:1;">${s.grade}</div>
+         </div>`
+      : '';
+
     return `
-<table style="${F}width:100%;border-collapse:collapse;background:${isOutstanding?GOLD_BG:'#fff'};border:1px solid ${isOutstanding?'#f0d080':'#e2e6ef'};margin-bottom:10px;box-shadow:${isOutstanding?'0 2px 8px rgba(184,148,42,0.15)':'0 2px 6px rgba(0,0,0,0.05)'};${isOutstanding?'border-left:4px solid '+GOLD+';':''}">
-<tr>
-  <td style="padding:0;width:72px;vertical-align:top;border-right:1px solid #eee;">${imgTag}</td>
-  <td style="${F}padding:13px 15px;vertical-align:top;">
-    <div style="margin-bottom:8px;">
-      <span style="font-size:18px;font-weight:800;color:#111;">${p.name}</span>
+<div style="${F}background:${isOutstanding?GOLD_BG:'#fff'};border:1px solid ${isOutstanding?'#f0d080':'#e2e6ef'};margin-bottom:10px;box-shadow:${isOutstanding?'0 2px 8px rgba(184,148,42,0.15)':'0 2px 6px rgba(0,0,0,0.05)'};${isOutstanding?'border-left:4px solid '+GOLD+';':''}overflow:hidden;">
+  <!-- TOP ROW: photo + name/stats + grade -->
+  <div style="display:flex;align-items:stretch;">
+    <div style="flex-shrink:0;">${imgTag}</div>
+    <div style="${F}flex:1;padding:12px 14px;min-width:0;">
+      <div style="${F}font-size:18px;font-weight:800;color:#111;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+      ${chipsDiv}
     </div>
-    ${chipsDiv}
-    ${notesHtml}
-  </td>
-  ${gradeCell}
-</tr>
-</table>`;
+    ${gradeBig}
+  </div>
+  <!-- BOTTOM: notes full width -->
+  ${s.notes ? `<div style="${F}font-size:13px;color:#555;padding:10px 14px 12px;border-top:1px solid #eee;line-height:1.7;background:${isOutstanding?'#fffef5':'#fafbfc'};">${s.notes}</div>` : ''}
+</div>`;
   }).join('');
 
   return `<div style="${F}max-width:700px;margin:0 auto;background:#f0f1f6;padding:0;">
@@ -649,21 +656,24 @@ ${(()=>{
   const rightLogo = detIsHome ? teamLogos.DET : awayLogo;
   const rightScore= detIsHome ? detScore      : awayScore;
 
-  return `<div style="${F}background:#fff;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
-  <div style="text-align:center;min-width:100px;">
-    <img src="${leftLogo}" width="130" height="130" style="display:block;object-fit:contain;margin:0 auto 6px;">
-    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${leftName}</div>
-  </div>
-  <div style="text-align:center;flex:1;">
-    <div style="${F}font-size:68px;font-weight:900;letter-spacing:-3px;line-height:1;color:#111;">
-      <span style="color:${parseInt(leftScore)>parseInt(rightScore)?RED:'#bbb'};">${leftScore}</span><span style="color:#ddd;margin:0 6px;">:</span><span style="color:${parseInt(rightScore)>parseInt(leftScore)?RED:'#bbb'};">${rightScore}</span>
+  return `<div style="${F}background:#fff;padding:20px 16px;border-bottom:3px solid ${RED};margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+  <style>.sb-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}.sb-team{text-align:center;min-width:80px;flex:1;}.sb-center{text-align:center;flex:0 0 auto;min-width:120px;}.sb-score{font-size:clamp(44px,10vw,68px);font-weight:900;letter-spacing:-3px;line-height:1;color:#111;white-space:nowrap;}@media(max-width:480px){.sb-row{flex-direction:column;align-items:center;gap:12px;}.sb-team{display:flex;align-items:center;gap:12px;width:100%;justify-content:center;}}</style>
+  <div class="sb-row">
+    <div class="sb-team">
+      <img src="${leftLogo}" width="100" height="100" style="display:block;object-fit:contain;margin:0 auto 6px;max-width:100px;">
+      <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${leftName}</div>
     </div>
-    <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${sbMeta}</div>
-    <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
-  </div>
-  <div style="text-align:center;min-width:100px;">
-    <img src="${rightLogo}" width="130" height="130" style="display:block;object-fit:contain;margin:0 auto 6px;">
-    <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${rightName}</div>
+    <div class="sb-center">
+      <div class="sb-score">
+        <span style="color:${parseInt(leftScore)>parseInt(rightScore)?RED:'#bbb'};">${leftScore}</span><span style="color:#ddd;margin:0 4px;">:</span><span style="color:${parseInt(rightScore)>parseInt(leftScore)?RED:'#bbb'};">${rightScore}</span>
+      </div>
+      <div style="${F}font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase;margin:6px 0 8px;">${sbMeta}</div>
+      <div style="display:inline-block;background:${detWon?RED:'#888'};color:#fff;${F}font-size:10px;font-weight:700;letter-spacing:2px;padding:4px 16px;text-transform:uppercase;">${badge}</div>
+    </div>
+    <div class="sb-team">
+      <img src="${rightLogo}" width="100" height="100" style="display:block;object-fit:contain;margin:0 auto 6px;max-width:100px;">
+      <div style="${F}font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999;">${rightName}</div>
+    </div>
   </div>
 </div>`;
 })()}
