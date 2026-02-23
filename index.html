@@ -1749,9 +1749,11 @@ function openGameDay() {
   modal.style.setProperty('position', 'fixed', 'important');
   modal.style.setProperty('top', '0', 'important');
   modal.style.setProperty('left', '0', 'important');
-  modal.style.setProperty('width', '100vw', 'important');
-  modal.style.setProperty('height', '100vh', 'important');
-  modal.style.setProperty('background', 'red', 'important');
+  modal.style.setProperty('right', '0', 'important');
+  modal.style.setProperty('bottom', '0', 'important');
+  modal.style.setProperty('width', window.innerWidth + 'px', 'important');
+  modal.style.setProperty('height', window.innerHeight + 'px', 'important');
+  modal.style.setProperty('background', 'rgba(0,0,0,0.97)', 'important');
   const rect2 = modal.getBoundingClientRect();
   console.log('after rect:', JSON.stringify({top:rect2.top,left:rect2.left,w:rect2.width,h:rect2.height}));
   gdLoadFromMainGame();
@@ -1876,7 +1878,7 @@ function gdRender_sample() {
 </script>
 
 <!-- GAME DAY MODAL -->
-<div id="gameday-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:rgba(0,0,0,0.97);flex-direction:row;overflow:hidden;">
+<div id="gameday-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:9999;background:rgba(0,0,0,0.97);flex-direction:row;overflow:hidden;">
 
   <!-- LEFT: Controls -->
   <div style="width:300px;min-width:300px;background:#0a0a0a;border-right:1px solid #1c1c1c;display:flex;flex-direction:column;height:100vh;overflow-y:auto;">
