@@ -1854,7 +1854,14 @@ let gdAccent = '#C8102E';
 let gdBg = '#fff';
 
 function openGameDay() {
-  document.getElementById('gameday-modal').style.display = 'flex';
+  const modal = document.getElementById('gameday-modal');
+  console.log('before:', modal.style.display, window.getComputedStyle(modal).display);
+  modal.style.setProperty('display', 'flex', 'important');
+  modal.style.setProperty('z-index', '99999', 'important');
+  modal.style.setProperty('position', 'fixed', 'important');
+  modal.style.setProperty('inset', '0', 'important');
+  modal.style.setProperty('background', 'rgba(0,0,0,0.97)', 'important');
+  console.log('after:', modal.style.display, window.getComputedStyle(modal).display);
   gdLoadFromMainGame();
 }
 
