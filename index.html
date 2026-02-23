@@ -1742,7 +1742,7 @@ function openGameDay() {
   if (existing) existing.remove();
   const modal = document.createElement('div');
   modal.id = 'gameday-modal';
-  modal.style.cssText = 'display:flex!important;flex-direction:row;position:fixed;top:0;left:0;width:' + window.innerWidth + 'px;height:' + window.innerHeight + 'px;z-index:99999;background:rgba(0,0,0,0.97);overflow:hidden;';
+  modal.style.cssText = 'display:flex!important;flex-direction:row;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;min-height:100vh;z-index:99999;background:rgba(0,0,0,0.97);overflow:hidden;';
   modal.innerHTML = `
 <div id="gameday-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:9999;background:rgba(0,0,0,0.97);flex-direction:row;overflow:hidden;">
 
