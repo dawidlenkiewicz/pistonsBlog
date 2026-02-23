@@ -177,7 +177,7 @@ select:focus, input:focus { border-color: #444; }
       <div id="col2-cut"></div>
       <div id="col-label-lines" style="margin-bottom:12px;"></div>
       <div id="col-vs" style="font-size:36px;font-weight:900;font-style:italic;line-height:1;margin-bottom:14px;letter-spacing:-1px;color:#C8102E;">VS</div>
-      <div id="col-opp-name-mid" style="font-size:52px;font-weight:900;font-style:italic;line-height:0.9;letter-spacing:-2px;color:#fff;text-transform:uppercase;"></div>
+      <div id="col-opp-name-mid" style="font-size:52px;font-weight:900;font-style:italic;line-height:0.9;letter-spacing:0px;color:#fff;text-transform:uppercase;"></div>
     </div>
 
     <!-- COL 3: Right player + Pistons logo -->
@@ -271,7 +271,7 @@ function gdRender() {
     if (isSmall) {
       labelHtml += `<div style="font-size:18px;font-weight:900;font-style:italic;color:${gdAccent};line-height:1;letter-spacing:1px;">${w}</div>`;
     } else {
-      labelHtml += `<div style="font-size:46px;font-weight:900;font-style:italic;color:#fff;line-height:0.88;letter-spacing:-2px;">${w}</div>`;
+      labelHtml += `<div style="font-size:46px;font-weight:900;font-style:italic;color:#fff;line-height:0.88;letter-spacing:0px;">${w}</div>`;
     }
   });
   document.getElementById('col-label-lines').innerHTML = labelHtml;
