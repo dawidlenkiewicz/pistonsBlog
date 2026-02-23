@@ -953,8 +953,7 @@ async function fetchBoxScore(gameId, oppAbb) {
     // Store news articles for JB quote fetching
     window._gameNews = json.news || [];
     window._gameId = gameId;
-    document.getElementById('jb-quotes-section').style.display = 'block';
-    document.getElementById('jb-quotes-output').innerHTML = '<div style="color:var(--muted);font-size:12px;">Select a completed game to load quotes, or click ↺ Refresh</div>';
+    // jb-quotes-section removed
     window._teamStats = {};
     (json.boxscore?.teams || []).forEach(t => {
       const abb = t.team?.abbreviation;
@@ -1097,86 +1096,6 @@ function ordinal(n) {
   return (s[(v-20)%10] || s[v] || s[0]);
 }
 
-async function fetchJBQuotes() {
-  const btn = document.getElementById('jb-refresh-btn');
-  const out = document.getElementById('jb-quotes-output');
-  btn.textContent = '⏳';
-  btn.disabled = true;
-  out.innerHTML = '<div style="color:var(--muted);font-size:12px;">Fetching articles…</div>';
-
-  try {
-    const news = window._gameNews || [];
-    if (!news.length) {
-      out.innerHTML = '<div style="color:var(--muted);font-size:12px;">No news articles found for this game.</div>';
-      btn.textContent = '↺ Refresh'; btn.disabled = false; return;
-    }
-
-    // Fetch up to 3 articles
-    const articles = news.slice(0, 3);
-    let combinedText = '';
-    for (const article of articles) {
-      const url = article.links?.web?.href || article.link;
-      if (!url) continue;
-      try {
-        const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-        if (!r.ok) continue;
-        const html = await r.text();
-        // Strip tags, get plain text
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        // Remove scripts/styles
-        tmp.querySelectorAll('script,style,nav,footer,header').forEach(e => e.remove());
-        const text = tmp.innerText || tmp.textContent || '';
-        combinedText += text.slice(0, 3000) + ' ';
-      } catch(e) { continue; }
-    }
-
-    if (!combinedText.trim()) {
-      out.innerHTML = '<div style="color:var(--muted);font-size:12px;">Could not fetch article text. Try a different game.</div>';
-      btn.textContent = '↺ Refresh'; btn.disabled = false; return;
-    }
-
-    // Call Claude API
-    out.innerHTML = '<div style="color:var(--muted);font-size:12px;">Asking Claude to extract quotes…</div>';
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `Extract all direct quotes from JB Bickerstaff (Detroit Pistons head coach) from the following article text. Return ONLY a JSON array of objects with keys "quote" and "context" (1 sentence explaining what he was responding to). If no quotes found, return an empty array []. No markdown, no explanation, just the JSON array.
-
-Article text:
-${combinedText.slice(0, 8000)}`
-        }]
-      })
-    });
-
-    const data = await response.json();
-    const raw = data.content?.[0]?.text || '[]';
-    let quotes;
-    try { quotes = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
-    catch(e) { quotes = []; }
-
-    if (!quotes.length) {
-      out.innerHTML = '<div style="color:var(--muted);font-size:12px;">No Bickerstaff quotes found in recent articles for this game.</div>';
-    } else {
-      out.innerHTML = quotes.map(q => `
-        <div style="border-left:3px solid var(--red);padding:10px 14px;margin-bottom:12px;background:var(--bg);">
-          <div style="font-size:13px;color:var(--text);line-height:1.6;font-style:italic;">"${q.quote}"</div>
-          ${q.context ? `<div style="font-size:11px;color:var(--muted);margin-top:5px;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${q.context}</div>` : ''}
-        </div>
-      `).join('');
-    }
-  } catch(e) {
-    out.innerHTML = `<div style="color:var(--muted);font-size:12px;">Error: ${e.message}</div>`;
-  }
-
-  btn.textContent = '↺ Refresh';
-  btn.disabled = false;
-}
 
 async function buildPreviewHTML() {
   const sel = document.getElementById('game-select');
@@ -1825,10 +1744,10 @@ function updateCard() {
     <div style="padding:16px 18px;flex:1;">
 
       <!-- Game selector -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Game</div>
-      <select id="gd-game-sel" onchange="gdUpdateFromGame()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:14px;cursor:pointer;box-sizing:border-box;"></select>
+
 
       <!-- Player cutout -->
+      <div id="gd-game-info" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#444;margin-bottom:14px;padding:8px 10px;background:#111;border-left:2px solid #C8102E;line-height:1.5;">Using game selected in main screen</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Player Cutout URL <span style="color:#2a2a2a;font-weight:400;letter-spacing:0">(PNG with transparent bg)</span></div>
       <input type="url" id="gd-player-url" placeholder="https://…" oninput="gdRender()"
         style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:4px;box-sizing:border-box;">
@@ -1935,70 +1854,31 @@ let gdAccent = '#C8102E';
 let gdBg = '#fff';
 
 function openGameDay() {
-  console.log('openGameDay called');
-  const modal = document.getElementById('gameday-modal');
-  console.log('modal element:', modal);
-  if (!modal) { console.error('gameday-modal not found!'); return; }
-  modal.style.display = 'flex';
-  console.log('modal display set to flex');
-  gdPopulateGames();
+  document.getElementById('gameday-modal').style.display = 'flex';
+  gdLoadFromMainGame();
 }
 
-function gdPopulateGames() {
-  console.log('gdPopulateGames called, scheduleGames:', window.scheduleGames?.length);
-  const sel = document.getElementById('gd-game-sel');
-  console.log('gd-game-sel:', sel);
+function gdLoadFromMainGame() {
+  const mainSel = document.getElementById('game-select');
+  const idx = mainSel ? parseInt(mainSel.value) : -1;
+  const e = (window.scheduleGames || [])[idx];
+  const infoEl = document.getElementById('gd-game-info');
 
-  let upcoming = (window.scheduleGames || []).filter(e => {
-    const st = e.competitions?.[0]?.status?.type;
-    return st?.completed === false && st?.state !== 'post';
-  }).slice(0, 10);
-
-  // Fallback sample data when schedule not loaded
-  if (!upcoming.length) {
-    window._gdSample = true;
-    const makeGame = (date, detHome, oppAbbr, oppName, oppShort, oppLogo) => ({
-      date, competitions: [{ status: { type: { completed: false } }, competitors: [
-        { team: { abbreviation: 'DET', displayName: 'Detroit Pistons', logos: [{href:'https://a.espncdn.com/i/teamlogos/nba/500/det.png'}] }, homeAway: detHome ? 'home' : 'away' },
-        { team: { abbreviation: oppAbbr, shortDisplayName: oppShort, displayName: oppName, logos: [{href: oppLogo}] }, homeAway: detHome ? 'away' : 'home' }
-      ]}]
-    });
-    upcoming = [
-      makeGame('2026-02-25T00:30Z', true,  'BOS','Boston Celtics',       'Celtics','https://a.espncdn.com/i/teamlogos/nba/500/bos.png'),
-      makeGame('2026-02-27T23:00Z', false, 'MIA','Miami Heat',           'Heat',   'https://a.espncdn.com/i/teamlogos/nba/500/mia.png'),
-      makeGame('2026-03-02T00:30Z', true,  'LAL','Los Angeles Lakers',   'Lakers', 'https://a.espncdn.com/i/teamlogos/nba/500/lal.png'),
-      makeGame('2026-03-05T23:00Z', false, 'MIL','Milwaukee Bucks',      'Bucks',  'https://a.espncdn.com/i/teamlogos/nba/500/mil.png'),
-      makeGame('2026-03-08T00:30Z', true,  'NYK','New York Knicks',      'Knicks', 'https://a.espncdn.com/i/teamlogos/nba/500/ny.png'),
-    ];
+  if (!e) {
+    if (infoEl) infoEl.textContent = 'No game selected in main screen';
+    gdRender();
+    return;
   }
 
-  sel.innerHTML = upcoming.map((e, i) => {
-    const opp = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
-    const det = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
-    const isHome = det?.homeAway === 'home';
-    const oppName = opp?.team?.shortDisplayName || opp?.team?.displayName || '?';
-    const d = new Date(e.date);
-    const dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
-    return `<option value="${i}">${dateStr} ${isHome ? 'vs' : '@'} ${oppName}</option>`;
-  }).join('');
-
-  window._gdUpcoming = upcoming;
-  gdUpdateFromGame();
-}
-
-function gdUpdateFromGame() {
-  const sel = document.getElementById('gd-game-sel');
-  const idx = parseInt(sel.value);
-  const upcoming = window._gdUpcoming || [];
-  if (isNaN(idx) || !upcoming[idx]) return;
-
-  const e = upcoming[idx];
+  window._gdEvent = e;
+  const opp = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
   const det = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
   const isHome = det?.homeAway === 'home';
-
-  // Auto-set label
+  const oppName = opp?.team?.shortDisplayName || opp?.team?.displayName || '?';
+  const d = new Date(e.date);
+  const dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  if (infoEl) infoEl.textContent = `${dateStr} ${isHome ? 'vs' : '@'} ${oppName}`;
   document.getElementById('gd-label').value = isHome ? 'HOME GAME DAY' : 'AWAY GAME DAY';
-
   gdRender();
 }
 
@@ -2017,13 +1897,8 @@ function gdSetBg(col, el) {
 }
 
 function gdRender() {
-  const sel = document.getElementById('gd-game-sel');
-  if (!window._gdUpcoming) { gdPopulateGames(); return; }
-  const idx = parseInt(sel.value);
-  const upcoming = window._gdUpcoming || [];
-  if (isNaN(idx) || !upcoming[idx]) return;
-
-  const e = upcoming[idx];
+  const e = window._gdEvent || null;
+  if (!e) { gdRender_sample(); return; }
   const opp = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
   const det = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
   const isHome = det?.homeAway === 'home';
@@ -2085,6 +1960,19 @@ function gdRender() {
   } else {
     playerImg.style.display = 'none';
   }
+}
+
+function gdRender_sample() {
+  // No game selected — show placeholder
+  document.getElementById('gd-bg').style.background = gdBg;
+  document.getElementById('gd-stripe').style.background = gdAccent;
+  document.getElementById('gd-cut').style.background = gdBg;
+  document.getElementById('gd-vs-el').style.color = gdAccent;
+  document.getElementById('gd-label-el').innerHTML =
+    `<div style="font-size:68px;font-weight:900;font-style:italic;color:${gdBg==='#fff'?'#111':'#fff'};line-height:0.88;letter-spacing:-3px;">GAME</div>
+     <div style="font-size:68px;font-weight:900;font-style:italic;color:${gdBg==='#fff'?'#111':'#fff'};line-height:0.88;letter-spacing:-3px;">DAY</div>`;
+  document.getElementById('gd-opp-logo').style.display = 'none';
+  document.getElementById('gd-datetime').innerHTML = '<span style="color:#555;">Select a game first</span>';
 }
 </script>
 
