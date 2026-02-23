@@ -1922,6 +1922,7 @@ let gdBg = '#fff';
 
 function openGameDay() {
   document.getElementById('gameday-modal').style.display = 'flex';
+  // Always populate — uses real schedule if loaded, sample data if not
   gdPopulateGames();
 }
 
@@ -1997,6 +1998,7 @@ function gdSetBg(col, el) {
 
 function gdRender() {
   const sel = document.getElementById('gd-game-sel');
+  if (!window._gdUpcoming) { gdPopulateGames(); return; }
   const idx = parseInt(sel.value);
   const upcoming = window._gdUpcoming || [];
   if (isNaN(idx) || !upcoming[idx]) return;
