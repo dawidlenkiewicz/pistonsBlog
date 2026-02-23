@@ -1739,13 +1739,21 @@ let gdBg = '#fff';
 
 function openGameDay() {
   const modal = document.getElementById('gameday-modal');
-  console.log('before:', modal.style.display, window.getComputedStyle(modal).display);
+  const rect = modal.getBoundingClientRect();
+  const cs = window.getComputedStyle(modal);
+  console.log('before display:', modal.style.display, cs.display);
+  console.log('rect:', JSON.stringify({top:rect.top,left:rect.left,w:rect.width,h:rect.height}));
+  console.log('z-index:', cs.zIndex, 'position:', cs.position, 'visibility:', cs.visibility, 'opacity:', cs.opacity);
   modal.style.setProperty('display', 'flex', 'important');
   modal.style.setProperty('z-index', '99999', 'important');
   modal.style.setProperty('position', 'fixed', 'important');
-  modal.style.setProperty('inset', '0', 'important');
-  modal.style.setProperty('background', 'rgba(0,0,0,0.97)', 'important');
-  console.log('after:', modal.style.display, window.getComputedStyle(modal).display);
+  modal.style.setProperty('top', '0', 'important');
+  modal.style.setProperty('left', '0', 'important');
+  modal.style.setProperty('width', '100vw', 'important');
+  modal.style.setProperty('height', '100vh', 'important');
+  modal.style.setProperty('background', 'red', 'important');
+  const rect2 = modal.getBoundingClientRect();
+  console.log('after rect:', JSON.stringify({top:rect2.top,left:rect2.left,w:rect2.width,h:rect2.height}));
   gdLoadFromMainGame();
 }
 
