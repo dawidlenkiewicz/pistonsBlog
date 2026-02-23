@@ -7,43 +7,136 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #080808; display: flex; height: 100vh; overflow: hidden; font-family: 'Barlow Condensed', sans-serif; }
-#controls { width: 280px; min-width: 280px; background: #0a0a0a; border-right: 1px solid #1c1c1c; height: 100vh; overflow-y: auto; }
-.panel-header { padding: 16px 18px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
-.panel-title { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #C8102E; }
-.close-btn { background: none; border: none; color: #555; font-size: 18px; cursor: pointer; }
+body { background: #080808; display: flex; height: 100vh; overflow: hidden; font-family: 'Barlow Condensed', sans-serif; color: #ccc; }
+
+/* LEFT CONTROLS */
+#controls {
+  width: 240px; min-width: 240px; background: #0a0a0a;
+  border-right: 1px solid #1c1c1c; height: 100vh; overflow-y: auto; flex-shrink: 0;
+}
+.panel-header { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #C8102E; }
+.close-btn { background: none; border: none; color: #444; font-size: 16px; cursor: pointer; }
 .close-btn:hover { color: #ccc; }
-.panel-body { padding: 16px 18px; }
-.field-label { font-size: 9px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #333; margin-bottom: 6px; margin-top: 14px; }
+.panel-body { padding: 14px 16px; }
+.field-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; margin-bottom: 5px; margin-top: 12px; }
 .field-label:first-child { margin-top: 0; }
-.field-hint { font-size: 9px; color: #1e1e1e; font-weight: 400; letter-spacing: 0; text-transform: none; }
-select, input[type=text], input[type=url] { width: 100%; background: #161616; border: 1px solid #222; color: #ccc; padding: 9px 11px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; outline: none; }
+select, input[type=text], input[type=url] {
+  width: 100%; background: #161616; border: 1px solid #222; color: #ccc;
+  padding: 8px 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; outline: none;
+}
 select:focus, input:focus { border-color: #444; }
-.swatches { display: flex; gap: 6px; flex-wrap: wrap; }
-.swatch { width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; transition: outline 0.1s; }
+.swatches { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.swatch { width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; transition: outline 0.1s; }
 .swatch.active { outline: 2px solid #fff; outline-offset: 2px; }
-.hint { font-size: 9px; color: #222; margin-top: 4px; line-height: 1.6; }
+.game-info { font-size: 11px; color: #C8102E; font-weight: 700; letter-spacing: 1px; padding: 8px 10px; background: #111; border-left: 2px solid #C8102E; margin-bottom: 12px; }
+.hint { font-size: 9px; color: #1e1e1e; margin-top: 3px; line-height: 1.5; }
 .hint a { color: #333; }
-.game-info { font-size: 10px; color: #555; padding: 8px 10px; background: #111; border-left: 2px solid #C8102E; margin-bottom: 14px; line-height: 1.5; }
-#preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; overflow-y: auto; }
-.preview-label { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; margin-bottom: 20px; }
-#gd-card { width: 560px; height: 560px; position: relative; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a; font-family: 'Barlow Condensed', sans-serif; flex-shrink: 0; }
+.section-divider { border: none; border-top: 1px solid #1a1a1a; margin: 14px 0; }
+
+/* RIGHT: 3-column card area */
+#preview {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 30px; overflow-y: auto; background: #060606;
+  gap: 16px;
+}
+.preview-label { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; }
+
+/* THE 3-COLUMN CARD */
+#gd-card {
+  display: flex; gap: 0; width: 900px; height: 500px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a;
+  flex-shrink: 0;
+}
+
+/* COL 1: Player photo + opponent logo */
+#col-player {
+  width: 300px; min-width: 300px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+#col-player-bg { position: absolute; inset: 0; background: #1d428a; }
+#col-player-img {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  height: 95%; object-fit: contain; object-position: bottom center;
+  display: none; filter: drop-shadow(0 0 30px rgba(0,0,0,0.5)); z-index: 2;
+}
+#col-opp-logo {
+  position: absolute; bottom: 16px; right: 16px; width: 80px; height: 80px;
+  object-fit: contain; display: none; z-index: 3;
+  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.5));
+}
+#col-opp-name {
+  position: absolute; bottom: 14px; left: 16px; z-index: 3;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.5); line-height: 1.3;
+  max-width: 140px;
+}
+
+/* COL 2: Text middle */
+#col-text {
+  flex: 1; position: relative; overflow: hidden; background: #111;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 32px 28px;
+  border-left: 1px solid #1a1a1a; border-right: 1px solid #1a1a1a;
+}
+#col-text-stripe {
+  position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #C8102E;
+}
+#col-det-logo {
+  position: absolute; top: 20px; right: 20px;
+  width: 48px; height: 48px; object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+
+/* COL 3: Right side (same as col 1 but for 2nd player or accent) */
+#col-right {
+  width: 300px; min-width: 300px; position: relative; overflow: hidden;
+}
+#col-right-bg { position: absolute; inset: 0; background: #C8102E; }
+#col-right-img {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  height: 95%; object-fit: contain; object-position: bottom center;
+  display: none; filter: drop-shadow(0 0 30px rgba(0,0,0,0.4)); z-index: 2;
+}
+#col-right-pattern {
+  position: absolute; inset: 0; z-index: 1;
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 20px);
+}
 </style>
 </head>
 <body>
 
+<!-- LEFT: Controls -->
 <div id="controls">
   <div class="panel-header">
-    <div class="panel-title">📅 Game Day Card</div>
+    <div class="panel-title">📅 Game Day</div>
     <button class="close-btn" onclick="window.close()">✕</button>
   </div>
   <div class="panel-body">
 
     <div id="gd-game-info" class="game-info">No game loaded</div>
 
-    <div class="field-label">Player Cutout URL <span class="field-hint">(PNG w/ transparent bg)</span></div>
+    <!-- COL 1 controls -->
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">◀ Left Column</div>
+
+    <div class="field-label">Player Cutout URL</div>
     <input type="url" id="gd-player-url" placeholder="https://…" oninput="gdRender()">
     <div class="hint">Use <a href="https://remove.bg" target="_blank">remove.bg</a> first</div>
+
+    <div class="field-label">Background Color</div>
+    <div class="swatches" id="col1-bgs">
+      <div class="swatch" style="background:#1d428a;" onclick="setCol1Bg('#1d428a',this)"></div>
+      <div class="swatch active" style="background:#0a0a0a;border:1px solid #333;" onclick="setCol1Bg('#0a0a0a',this)"></div>
+      <div class="swatch" style="background:#C8102E;" onclick="setCol1Bg('#C8102E',this)"></div>
+      <div class="swatch" style="background:#fff;border:1px solid #444;" onclick="setCol1Bg('#ffffff',this)"></div>
+      <div class="swatch" style="background:#f5c518;" onclick="setCol1Bg('#f5c518',this)"></div>
+      <input type="color" id="col1-custom-bg" value="#0a0a0a" oninput="setCol1BgCustom(this.value)" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
+    </div>
+
+    <hr class="section-divider">
+
+    <!-- COL 2 controls -->
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">▶ Middle Column</div>
 
     <div class="field-label">Label</div>
     <select id="gd-label" onchange="gdRender()">
@@ -54,153 +147,181 @@ select:focus, input:focus { border-color: #444; }
     </select>
 
     <div class="field-label">Accent Color</div>
-    <div class="swatches" id="gd-colors">
-      <div class="swatch active" style="background:#C8102E;" onclick="gdSetColor('#C8102E',this)"></div>
-      <div class="swatch" style="background:#1d428a;border:1px solid #333;" onclick="gdSetColor('#1d428a',this)"></div>
-      <div class="swatch" style="background:#fff;border:1px solid #444;" onclick="gdSetColor('#ffffff',this)"></div>
-      <div class="swatch" style="background:#f5c518;" onclick="gdSetColor('#f5c518',this)"></div>
-      <div class="swatch" style="background:#000;border:1px solid #444;" onclick="gdSetColor('#000000',this)"></div>
+    <div class="swatches" id="gd-accents">
+      <div class="swatch active" style="background:#C8102E;" onclick="setAccent('#C8102E',this)"></div>
+      <div class="swatch" style="background:#1d428a;" onclick="setAccent('#1d428a',this)"></div>
+      <div class="swatch" style="background:#f5c518;" onclick="setAccent('#f5c518',this)"></div>
+      <div class="swatch" style="background:#fff;border:1px solid #444;" onclick="setAccent('#ffffff',this)"></div>
     </div>
 
-    <div class="field-label">Background</div>
-    <div class="swatches" id="gd-bgs">
-      <div class="swatch active" style="background:#fff;border:1px solid #555;" onclick="gdSetBg('#ffffff',this)"></div>
-      <div class="swatch" style="background:#0a0a0a;border:1px solid #333;" onclick="gdSetBg('#0a0a0a',this)"></div>
-      <div class="swatch" style="background:#f5c518;" onclick="gdSetBg('#f5c518',this)"></div>
-      <div class="swatch" style="background:#1d428a;" onclick="gdSetBg('#1d428a',this)"></div>
-      <div class="swatch" style="background:#C8102E;" onclick="gdSetBg('#C8102E',this)"></div>
+    <hr class="section-divider">
+
+    <!-- COL 3 controls -->
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:8px;">▶ Right Column</div>
+
+    <div class="field-label">2nd Player Cutout URL <span style="color:#1e1e1e;font-weight:400;letter-spacing:0;text-transform:none;">optional</span></div>
+    <input type="url" id="gd-player2-url" placeholder="https://…" oninput="gdRender()">
+
+    <div class="field-label">Background Color</div>
+    <div class="swatches" id="col3-bgs">
+      <div class="swatch active" style="background:#C8102E;" onclick="setCol3Bg('#C8102E',this)"></div>
+      <div class="swatch" style="background:#1d428a;" onclick="setCol3Bg('#1d428a',this)"></div>
+      <div class="swatch" style="background:#0a0a0a;border:1px solid #333;" onclick="setCol3Bg('#0a0a0a',this)"></div>
+      <div class="swatch" style="background:#f5c518;" onclick="setCol3Bg('#f5c518',this)"></div>
+      <input type="color" id="col3-custom-bg" value="#C8102E" oninput="setCol3BgCustom(this.value)" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
     </div>
-
-    <div class="field-label">Date Override <span class="field-hint">optional</span></div>
-    <input type="text" id="gd-date-override" placeholder="25.02" oninput="gdRender()">
-
-    <div class="field-label" style="margin-top:8px;">Time Override <span class="field-hint">optional</span></div>
-    <input type="text" id="gd-time-override" placeholder="21:30" oninput="gdRender()">
 
     <div class="hint" style="margin-top:24px;text-align:center;color:#1a1a1a;">Screenshot: Cmd+Shift+4 · Win+Shift+S</div>
   </div>
 </div>
 
+<!-- RIGHT: Card Preview -->
 <div id="preview">
   <div class="preview-label">Screenshot the card below ↓</div>
+
   <div id="gd-card">
-    <div id="gd-bg" style="position:absolute;inset:0;background:#fff;"></div>
-    <div id="gd-stripe" style="position:absolute;right:0;top:0;bottom:0;width:52%;background:#C8102E;"></div>
-    <div id="gd-cut" style="position:absolute;top:0;bottom:0;right:52%;width:90px;background:#fff;transform:skewX(-5deg);transform-origin:top right;"></div>
-    <div id="gd-dot-grid" style="position:absolute;bottom:28px;left:22px;opacity:0.12;"></div>
-    <div style="position:absolute;top:0;right:0;width:160px;height:160px;overflow:hidden;opacity:0.12;">
-      <div style="position:absolute;top:18px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
-      <div style="position:absolute;top:40px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
-      <div style="position:absolute;top:62px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
-      <div style="position:absolute;top:84px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
+
+    <!-- COL 1: Player -->
+    <div id="col-player">
+      <div id="col-player-bg"></div>
+      <img id="col-player-img" src="" alt="">
+      <img id="col-opp-logo" src="" alt="">
+      <div id="col-opp-name"></div>
     </div>
-    <img id="gd-player-img" src="" style="position:absolute;right:-10px;bottom:0;height:92%;object-fit:contain;object-position:bottom center;display:none;filter:drop-shadow(-10px 0 30px rgba(0,0,0,0.35));z-index:5;">
-    <img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" style="position:absolute;top:20px;right:18px;width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));z-index:10;">
-    <div style="position:absolute;left:26px;top:44px;right:220px;z-index:10;">
-      <div id="gd-label-lines" style="margin-bottom:10px;"></div>
-      <div id="gd-vs-line" style="font-size:50px;font-weight:900;font-style:italic;color:#C8102E;line-height:1;margin-bottom:14px;letter-spacing:-1px;">VS</div>
-      <img id="gd-opp-logo" src="" style="width:110px;height:110px;object-fit:contain;display:none;margin-bottom:10px;">
-      <div id="gd-datetime" style="font-size:20px;font-weight:700;letter-spacing:1px;line-height:1.5;color:#666;"></div>
+
+    <!-- COL 2: Text -->
+    <div id="col-text">
+      <div id="col-text-stripe"></div>
+      <img id="col-det-logo" src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="DET">
+      <div id="col-label-lines" style="margin-bottom:16px;"></div>
+      <div id="col-vs" style="font-size:44px;font-weight:900;font-style:italic;line-height:1;margin-bottom:16px;letter-spacing:-1px;color:#C8102E;">VS</div>
+      <img id="col-opp-logo-mid" src="" style="width:100px;height:100px;object-fit:contain;display:none;margin-bottom:12px;">
+      <div id="col-opp-name-mid" style="font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;"></div>
     </div>
+
+    <!-- COL 3: Right -->
+    <div id="col-right">
+      <div id="col-right-bg"></div>
+      <div id="col-right-pattern"></div>
+      <img id="col-right-img" src="" alt="">
+    </div>
+
   </div>
 </div>
 
 <script>
 let gdAccent = '#C8102E';
-let gdBg = '#ffffff';
+let col1Bg = '#0a0a0a';
+let col3Bg = '#C8102E';
 let gdGame = null;
 
-// Load game data passed from main app
 try {
   const raw = sessionStorage.getItem('gdGameData');
   if (raw) gdGame = JSON.parse(raw);
-} catch(e) {}
+  console.log('gdGame:', gdGame);
+} catch(e) { console.error(e); }
 
 function init() {
   if (gdGame) {
     const d = new Date(gdGame.date);
     const dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
-    document.getElementById('gd-game-info').textContent = dateStr + ' ' + (gdGame.isHome ? 'vs' : '@') + ' ' + gdGame.opp;
+    const label = (gdGame.isHome ? 'vs' : '@') + ' ' + gdGame.opp;
+    document.getElementById('gd-game-info').textContent = dateStr + ' ' + label;
     document.getElementById('gd-label').value = gdGame.isHome ? 'HOME GAME DAY' : 'AWAY GAME DAY';
+
+    if (gdGame.oppLogo) {
+      document.getElementById('col-opp-logo').src = gdGame.oppLogo;
+      document.getElementById('col-opp-logo').style.display = 'block';
+      document.getElementById('col-opp-logo-mid').src = gdGame.oppLogo;
+      document.getElementById('col-opp-logo-mid').style.display = 'block';
+    }
+    if (gdGame.opp) {
+      document.getElementById('col-opp-name').textContent = gdGame.opp;
+      document.getElementById('col-opp-name-mid').textContent = gdGame.opp;
+    }
   } else {
-    document.getElementById('gd-game-info').textContent = 'No game selected — select one in main app first';
+    document.getElementById('gd-game-info').textContent = 'Select a game in main app first';
   }
   gdRender();
 }
 
-function gdSetColor(col, el) {
+function setAccent(col, el) {
   gdAccent = col;
-  document.querySelectorAll('#gd-colors .swatch').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('#gd-accents .swatch').forEach(d => d.classList.remove('active'));
   el.classList.add('active');
   gdRender();
 }
-
-function gdSetBg(col, el) {
-  gdBg = col;
-  document.querySelectorAll('#gd-bgs .swatch').forEach(d => d.classList.remove('active'));
-  el.classList.add('active');
-  gdRender();
+function setCol1Bg(col, el) {
+  col1Bg = col;
+  document.querySelectorAll('#col1-bgs .swatch').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('col-player-bg').style.background = col1Bg;
+  document.getElementById('col-cut').style.background = col1Bg;
+}
+function setCol1BgCustom(col) {
+  col1Bg = col;
+  document.querySelectorAll('#col1-bgs .swatch').forEach(d => d.classList.remove('active'));
+  document.getElementById('col-player-bg').style.background = col1Bg;
+}
+function setCol3Bg(col, el) {
+  col3Bg = col;
+  document.querySelectorAll('#col3-bgs .swatch').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('col-right-bg').style.background = col3Bg;
+}
+function setCol3BgCustom(col) {
+  col3Bg = col;
+  document.querySelectorAll('#col3-bgs .swatch').forEach(d => d.classList.remove('active'));
+  document.getElementById('col-right-bg').style.background = col3Bg;
 }
 
 function isDark(hex) {
   const c = hex.replace('#','');
   const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
-  return (r*299 + g*587 + b*114)/1000 < 128;
+  return (r*299+g*587+b*114)/1000 < 128;
 }
 
 function gdRender() {
   const label = document.getElementById('gd-label').value;
   const playerUrl = document.getElementById('gd-player-url').value.trim();
-  const dateOverride = document.getElementById('gd-date-override').value.trim();
-  const timeOverride = document.getElementById('gd-time-override').value.trim();
-  const bgDark = isDark(gdBg);
-  const textColor = bgDark ? '#ffffff' : '#111111';
+  const player2Url = document.getElementById('gd-player2-url').value.trim();
 
-  let dateStr = dateOverride || '—';
-  let timeStr = timeOverride || '';
-  if (gdGame && gdGame.date) {
-    const d = new Date(gdGame.date);
-    if (!dateOverride) dateStr = d.toLocaleDateString('pl-PL', {day:'2-digit', month:'2-digit'});
-    if (!timeOverride) timeStr = d.toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'});
-  }
+  // Col 1 bg
+  document.getElementById('col-player-bg').style.background = col1Bg;
 
-  document.getElementById('gd-bg').style.background = gdBg;
-  document.getElementById('gd-stripe').style.background = gdAccent;
-  document.getElementById('gd-cut').style.background = gdBg;
-  document.getElementById('gd-vs-line').style.color = gdAccent;
+  // Col 1 player
+  const pImg = document.getElementById('col-player-img');
+  if (playerUrl) { pImg.src = playerUrl; pImg.style.display = 'block'; }
+  else { pImg.style.display = 'none'; }
 
+  // Col 3 bg
+  document.getElementById('col-right-bg').style.background = col3Bg;
+
+  // Col 3 player
+  const p2Img = document.getElementById('col-right-img');
+  if (player2Url) { p2Img.src = player2Url; p2Img.style.display = 'block'; }
+  else { p2Img.style.display = 'none'; }
+
+  // Accent
+  document.getElementById('col-text-stripe').style.background = gdAccent;
+  document.getElementById('col-vs').style.color = gdAccent;
+
+  // Label lines
   const words = label.split(' ');
+  const textColor = '#fff';
   let labelHtml = '';
   words.forEach((w, i) => {
     const isSmall = words.length > 2 && i === 0 && w.length <= 5;
     if (isSmall) {
-      labelHtml += `<div style="font-size:26px;font-weight:900;font-style:italic;color:${gdAccent};line-height:0.9;letter-spacing:1px;">${w}</div>`;
+      labelHtml += `<div style="font-size:22px;font-weight:900;font-style:italic;color:${gdAccent};line-height:0.9;letter-spacing:1px;">${w}</div>`;
     } else {
-      labelHtml += `<div style="font-size:${words.length > 2 ? 68 : 60}px;font-weight:900;font-style:italic;color:${textColor};line-height:0.88;letter-spacing:-3px;">${w}</div>`;
+      labelHtml += `<div style="font-size:56px;font-weight:900;font-style:italic;color:${textColor};line-height:0.88;letter-spacing:-2px;">${w}</div>`;
     }
   });
-  document.getElementById('gd-label-lines').innerHTML = labelHtml;
-
-  const oppEl = document.getElementById('gd-opp-logo');
-  if (gdGame && gdGame.oppLogo) { oppEl.src = gdGame.oppLogo; oppEl.style.display = 'block'; }
-  else { oppEl.style.display = 'none'; }
-
-  document.getElementById('gd-datetime').style.color = bgDark ? '#aaa' : '#666';
-  document.getElementById('gd-datetime').innerHTML =
-    `<span style="color:${gdAccent};font-weight:900;">${dateStr}</span>${timeStr ? '&nbsp; ' + timeStr : ''}`;
-
-  const pImg = document.getElementById('gd-player-img');
-  if (playerUrl) { pImg.src = playerUrl; pImg.style.display = 'block'; }
-  else { pImg.style.display = 'none'; }
-
-  let dots = '';
-  for (let r=0;r<5;r++) {
-    for (let c=0;c<7;c++) dots += `<div style="width:6px;height:6px;border-radius:50%;background:${gdAccent};display:inline-block;margin:3px;"></div>`;
-    dots += '<br>';
-  }
-  document.getElementById('gd-dot-grid').innerHTML = dots;
+  document.getElementById('col-label-lines').innerHTML = labelHtml;
 }
 
+// Init on load
 init();
 </script>
 </body>

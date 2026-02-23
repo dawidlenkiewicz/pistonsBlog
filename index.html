@@ -1751,7 +1751,9 @@ function openGameDay() {
       date: e.date,
       isHome: det?.homeAway === 'home',
       opp: opp?.team?.shortDisplayName || opp?.team?.displayName || '?',
-      oppLogo: opp?.team?.logos?.[0]?.href || ''
+      oppFull: opp?.team?.displayName || '',
+      oppAbbr: opp?.team?.abbreviation || '',
+      oppLogo: opp?.team?.logos?.[0]?.href || opp?.team?.logo || ''
     };
   }
   
