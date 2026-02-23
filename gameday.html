@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Day Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #080808; display: flex; height: 100vh; overflow: hidden; font-family: 'Barlow Condensed', sans-serif; }
+#controls { width: 280px; min-width: 280px; background: #0a0a0a; border-right: 1px solid #1c1c1c; height: 100vh; overflow-y: auto; }
+.panel-header { padding: 16px 18px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #C8102E; }
+.close-btn { background: none; border: none; color: #555; font-size: 18px; cursor: pointer; }
+.close-btn:hover { color: #ccc; }
+.panel-body { padding: 16px 18px; }
+.field-label { font-size: 9px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #333; margin-bottom: 6px; margin-top: 14px; }
+.field-label:first-child { margin-top: 0; }
+.field-hint { font-size: 9px; color: #1e1e1e; font-weight: 400; letter-spacing: 0; text-transform: none; }
+select, input[type=text], input[type=url] { width: 100%; background: #161616; border: 1px solid #222; color: #ccc; padding: 9px 11px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; outline: none; }
+select:focus, input:focus { border-color: #444; }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatch { width: 28px; height: 28px; cursor: pointer; flex-shrink: 0; transition: outline 0.1s; }
+.swatch.active { outline: 2px solid #fff; outline-offset: 2px; }
+.hint { font-size: 9px; color: #222; margin-top: 4px; line-height: 1.6; }
+.hint a { color: #333; }
+.game-info { font-size: 10px; color: #555; padding: 8px 10px; background: #111; border-left: 2px solid #C8102E; margin-bottom: 14px; line-height: 1.5; }
+#preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; overflow-y: auto; }
+.preview-label { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; margin-bottom: 20px; }
+#gd-card { width: 560px; height: 560px; position: relative; overflow: hidden; box-shadow: 0 40px 120px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a; font-family: 'Barlow Condensed', sans-serif; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <div class="panel-header">
+    <div class="panel-title">📅 Game Day Card</div>
+    <button class="close-btn" onclick="window.close()">✕</button>
+  </div>
+  <div class="panel-body">
+
+    <div id="gd-game-info" class="game-info">No game loaded</div>
+
+    <div class="field-label">Player Cutout URL <span class="field-hint">(PNG w/ transparent bg)</span></div>
+    <input type="url" id="gd-player-url" placeholder="https://…" oninput="gdRender()">
+    <div class="hint">Use <a href="https://remove.bg" target="_blank">remove.bg</a> first</div>
+
+    <div class="field-label">Label</div>
+    <select id="gd-label" onchange="gdRender()">
+      <option value="HOME GAME DAY">HOME GAME DAY</option>
+      <option value="AWAY GAME DAY">AWAY GAME DAY</option>
+      <option value="GAME DAY">GAME DAY</option>
+      <option value="MATCH DAY">MATCH DAY</option>
+    </select>
+
+    <div class="field-label">Accent Color</div>
+    <div class="swatches" id="gd-colors">
+      <div class="swatch active" style="background:#C8102E;" onclick="gdSetColor('#C8102E',this)"></div>
+      <div class="swatch" style="background:#1d428a;border:1px solid #333;" onclick="gdSetColor('#1d428a',this)"></div>
+      <div class="swatch" style="background:#fff;border:1px solid #444;" onclick="gdSetColor('#ffffff',this)"></div>
+      <div class="swatch" style="background:#f5c518;" onclick="gdSetColor('#f5c518',this)"></div>
+      <div class="swatch" style="background:#000;border:1px solid #444;" onclick="gdSetColor('#000000',this)"></div>
+    </div>
+
+    <div class="field-label">Background</div>
+    <div class="swatches" id="gd-bgs">
+      <div class="swatch active" style="background:#fff;border:1px solid #555;" onclick="gdSetBg('#ffffff',this)"></div>
+      <div class="swatch" style="background:#0a0a0a;border:1px solid #333;" onclick="gdSetBg('#0a0a0a',this)"></div>
+      <div class="swatch" style="background:#f5c518;" onclick="gdSetBg('#f5c518',this)"></div>
+      <div class="swatch" style="background:#1d428a;" onclick="gdSetBg('#1d428a',this)"></div>
+      <div class="swatch" style="background:#C8102E;" onclick="gdSetBg('#C8102E',this)"></div>
+    </div>
+
+    <div class="field-label">Date Override <span class="field-hint">optional</span></div>
+    <input type="text" id="gd-date-override" placeholder="25.02" oninput="gdRender()">
+
+    <div class="field-label" style="margin-top:8px;">Time Override <span class="field-hint">optional</span></div>
+    <input type="text" id="gd-time-override" placeholder="21:30" oninput="gdRender()">
+
+    <div class="hint" style="margin-top:24px;text-align:center;color:#1a1a1a;">Screenshot: Cmd+Shift+4 · Win+Shift+S</div>
+  </div>
+</div>
+
+<div id="preview">
+  <div class="preview-label">Screenshot the card below ↓</div>
+  <div id="gd-card">
+    <div id="gd-bg" style="position:absolute;inset:0;background:#fff;"></div>
+    <div id="gd-stripe" style="position:absolute;right:0;top:0;bottom:0;width:52%;background:#C8102E;"></div>
+    <div id="gd-cut" style="position:absolute;top:0;bottom:0;right:52%;width:90px;background:#fff;transform:skewX(-5deg);transform-origin:top right;"></div>
+    <div id="gd-dot-grid" style="position:absolute;bottom:28px;left:22px;opacity:0.12;"></div>
+    <div style="position:absolute;top:0;right:0;width:160px;height:160px;overflow:hidden;opacity:0.12;">
+      <div style="position:absolute;top:18px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
+      <div style="position:absolute;top:40px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
+      <div style="position:absolute;top:62px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
+      <div style="position:absolute;top:84px;right:-50px;width:280px;height:7px;background:#fff;transform:rotate(45deg);"></div>
+    </div>
+    <img id="gd-player-img" src="" style="position:absolute;right:-10px;bottom:0;height:92%;object-fit:contain;object-position:bottom center;display:none;filter:drop-shadow(-10px 0 30px rgba(0,0,0,0.35));z-index:5;">
+    <img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" style="position:absolute;top:20px;right:18px;width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4));z-index:10;">
+    <div style="position:absolute;left:26px;top:44px;right:220px;z-index:10;">
+      <div id="gd-label-lines" style="margin-bottom:10px;"></div>
+      <div id="gd-vs-line" style="font-size:50px;font-weight:900;font-style:italic;color:#C8102E;line-height:1;margin-bottom:14px;letter-spacing:-1px;">VS</div>
+      <img id="gd-opp-logo" src="" style="width:110px;height:110px;object-fit:contain;display:none;margin-bottom:10px;">
+      <div id="gd-datetime" style="font-size:20px;font-weight:700;letter-spacing:1px;line-height:1.5;color:#666;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let gdAccent = '#C8102E';
+let gdBg = '#ffffff';
+let gdGame = null;
+
+// Load game data passed from main app
+try {
+  const raw = sessionStorage.getItem('gdGameData');
+  if (raw) gdGame = JSON.parse(raw);
+} catch(e) {}
+
+function init() {
+  if (gdGame) {
+    const d = new Date(gdGame.date);
+    const dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    document.getElementById('gd-game-info').textContent = dateStr + ' ' + (gdGame.isHome ? 'vs' : '@') + ' ' + gdGame.opp;
+    document.getElementById('gd-label').value = gdGame.isHome ? 'HOME GAME DAY' : 'AWAY GAME DAY';
+  } else {
+    document.getElementById('gd-game-info').textContent = 'No game selected — select one in main app first';
+  }
+  gdRender();
+}
+
+function gdSetColor(col, el) {
+  gdAccent = col;
+  document.querySelectorAll('#gd-colors .swatch').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  gdRender();
+}
+
+function gdSetBg(col, el) {
+  gdBg = col;
+  document.querySelectorAll('#gd-bgs .swatch').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+  gdRender();
+}
+
+function isDark(hex) {
+  const c = hex.replace('#','');
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  return (r*299 + g*587 + b*114)/1000 < 128;
+}
+
+function gdRender() {
+  const label = document.getElementById('gd-label').value;
+  const playerUrl = document.getElementById('gd-player-url').value.trim();
+  const dateOverride = document.getElementById('gd-date-override').value.trim();
+  const timeOverride = document.getElementById('gd-time-override').value.trim();
+  const bgDark = isDark(gdBg);
+  const textColor = bgDark ? '#ffffff' : '#111111';
+
+  let dateStr = dateOverride || '—';
+  let timeStr = timeOverride || '';
+  if (gdGame && gdGame.date) {
+    const d = new Date(gdGame.date);
+    if (!dateOverride) dateStr = d.toLocaleDateString('pl-PL', {day:'2-digit', month:'2-digit'});
+    if (!timeOverride) timeStr = d.toLocaleTimeString('pl-PL', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  document.getElementById('gd-bg').style.background = gdBg;
+  document.getElementById('gd-stripe').style.background = gdAccent;
+  document.getElementById('gd-cut').style.background = gdBg;
+  document.getElementById('gd-vs-line').style.color = gdAccent;
+
+  const words = label.split(' ');
+  let labelHtml = '';
+  words.forEach((w, i) => {
+    const isSmall = words.length > 2 && i === 0 && w.length <= 5;
+    if (isSmall) {
+      labelHtml += `<div style="font-size:26px;font-weight:900;font-style:italic;color:${gdAccent};line-height:0.9;letter-spacing:1px;">${w}</div>`;
+    } else {
+      labelHtml += `<div style="font-size:${words.length > 2 ? 68 : 60}px;font-weight:900;font-style:italic;color:${textColor};line-height:0.88;letter-spacing:-3px;">${w}</div>`;
+    }
+  });
+  document.getElementById('gd-label-lines').innerHTML = labelHtml;
+
+  const oppEl = document.getElementById('gd-opp-logo');
+  if (gdGame && gdGame.oppLogo) { oppEl.src = gdGame.oppLogo; oppEl.style.display = 'block'; }
+  else { oppEl.style.display = 'none'; }
+
+  document.getElementById('gd-datetime').style.color = bgDark ? '#aaa' : '#666';
+  document.getElementById('gd-datetime').innerHTML =
+    `<span style="color:${gdAccent};font-weight:900;">${dateStr}</span>${timeStr ? '&nbsp; ' + timeStr : ''}`;
+
+  const pImg = document.getElementById('gd-player-img');
+  if (playerUrl) { pImg.src = playerUrl; pImg.style.display = 'block'; }
+  else { pImg.style.display = 'none'; }
+
+  let dots = '';
+  for (let r=0;r<5;r++) {
+    for (let c=0;c<7;c++) dots += `<div style="width:6px;height:6px;border-radius:50%;background:${gdAccent};display:inline-block;margin:3px;"></div>`;
+    dots += '<br>';
+  }
+  document.getElementById('gd-dot-grid').innerHTML = dots;
+}
+
+init();
+</script>
+</body>
+</html>

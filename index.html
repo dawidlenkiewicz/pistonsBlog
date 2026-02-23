@@ -1738,131 +1738,28 @@ let gdAccent = '#C8102E';
 let gdBg = '#fff';
 
 function openGameDay() {
-  const existing = document.getElementById('gameday-modal');
-  if (existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id = 'gameday-modal';
-  modal.style.cssText = 'display:flex!important;flex-direction:row;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;min-height:100vh;z-index:99999;background:rgba(0,0,0,0.97);overflow:hidden;';
-  modal.innerHTML = `
-<div id="gameday-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:9999;background:rgba(0,0,0,0.97);flex-direction:row;overflow:hidden;">
-
-  <!-- LEFT: Controls -->
-  <div style="width:300px;min-width:300px;background:#0a0a0a;border-right:1px solid #1c1c1c;display:flex;flex-direction:column;height:100vh;overflow-y:auto;">
-    <div style="padding:16px 18px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#C8102E;">📅 Game Day Card</div>
-      <button onclick="document.getElementById('gameday-modal').style.display='none'" style="background:none;border:none;color:#333;font-size:18px;cursor:pointer;line-height:1;">✕</button>
-    </div>
-
-    <div style="padding:16px 18px;flex:1;">
-
-      <!-- Game selector -->
-
-
-      <!-- Player cutout -->
-      <div id="gd-game-info" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#444;margin-bottom:14px;padding:8px 10px;background:#111;border-left:2px solid #C8102E;line-height:1.5;">Using game selected in main screen</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Player Cutout URL <span style="color:#2a2a2a;font-weight:400;letter-spacing:0">(PNG with transparent bg)</span></div>
-      <input type="url" id="gd-player-url" placeholder="https://…" oninput="gdRender()"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:4px;box-sizing:border-box;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#2a2a2a;margin-bottom:14px;line-height:1.6;">Use <a href="https://remove.bg" target="_blank" style="color:#444;">remove.bg</a> to remove background first</div>
-
-      <!-- Home/Away label -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Label</div>
-      <select id="gd-label" onchange="gdRender()" style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:14px;cursor:pointer;box-sizing:border-box;">
-        <option value="HOME GAME DAY">HOME GAME DAY</option>
-        <option value="AWAY GAME DAY">AWAY GAME DAY</option>
-        <option value="GAME DAY">GAME DAY</option>
-        <option value="MATCH DAY">MATCH DAY</option>
-      </select>
-
-      <!-- Accent color -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Accent Color</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="gd-colors">
-        <div onclick="gdSetColor('#C8102E',this)" style="width:28px;height:28px;background:#C8102E;cursor:pointer;outline:2px solid #fff;"></div>
-        <div onclick="gdSetColor('#1d428a',this)" style="width:28px;height:28px;background:#1d428a;cursor:pointer;outline:2px solid transparent;"></div>
-        <div onclick="gdSetColor('#fff',this)" style="width:28px;height:28px;background:#fff;cursor:pointer;outline:2px solid transparent;"></div>
-        <div onclick="gdSetColor('#f5c518',this)" style="width:28px;height:28px;background:#f5c518;cursor:pointer;outline:2px solid transparent;"></div>
-        <div onclick="gdSetColor('#000',this)" style="width:28px;height:28px;background:#000;border:1px solid #333;cursor:pointer;outline:2px solid transparent;"></div>
-      </div>
-
-      <!-- BG color -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Background</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="gd-bgs">
-        <div onclick="gdSetBg('#fff',this)" style="width:28px;height:28px;background:#fff;cursor:pointer;outline:2px solid #fff;border:1px solid #eee;"></div>
-        <div onclick="gdSetBg('#0a0a0a',this)" style="width:28px;height:28px;background:#0a0a0a;cursor:pointer;outline:2px solid transparent;border:1px solid #333;"></div>
-        <div onclick="gdSetBg('#f5c518',this)" style="width:28px;height:28px;background:#f5c518;cursor:pointer;outline:2px solid transparent;"></div>
-        <div onclick="gdSetBg('#1d428a',this)" style="width:28px;height:28px;background:#1d428a;cursor:pointer;outline:2px solid transparent;"></div>
-        <div onclick="gdSetBg('#C8102E',this)" style="width:28px;height:28px;background:#C8102E;cursor:pointer;outline:2px solid transparent;"></div>
-      </div>
-
-      <!-- Custom date/time override -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">Date Override <span style="color:#2a2a2a;font-weight:400;letter-spacing:0">(optional)</span></div>
-      <input type="text" id="gd-date-override" placeholder="22.02" oninput="gdRender()"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:8px;box-sizing:border-box;">
-
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;margin-top:4px;">Time <span style="color:#2a2a2a;font-weight:400;letter-spacing:0">(optional)</span></div>
-      <input type="text" id="gd-time-override" placeholder="21:30" oninput="gdRender()"
-        style="width:100%;background:#161616;border:1px solid #222;color:#ccc;padding:9px 11px;font-family:'Barlow Condensed',sans-serif;font-size:13px;outline:none;margin-bottom:20px;box-sizing:border-box;">
-
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#1a1a1a;text-align:center;margin-top:10px;line-height:1.8;">Screenshot with Cmd+Shift+4 · Win+Shift+S</div>
-    </div>
-  </div>
-
-  <!-- RIGHT: Card Preview -->
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;overflow-y:auto;background:#080808;">
-    <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#1e1e1e;margin-bottom:20px;">Screenshot the card below ↓</div>
-
-    <!-- THE CARD -->
-    <div id="gd-card" style="width:560px;height:560px;position:relative;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.9),0 0 0 1px #1a1a1a;font-family:'Barlow Condensed',sans-serif;">
-
-      <!-- BG -->
-      <div id="gd-bg" style="position:absolute;inset:0;background:#fff;"></div>
-
-      <!-- Accent stripe panel (right side behind player) -->
-      <div id="gd-stripe" style="position:absolute;right:0;top:0;bottom:0;width:55%;background:#C8102E;"></div>
-
-      <!-- Diagonal cut overlay for stripe -->
-      <div id="gd-cut" style="position:absolute;top:0;bottom:0;right:55%;width:80px;background:#fff;transform:skewX(-6deg);transform-origin:top right;"></div>
-
-      <!-- Decorative dots grid -->
-      <div style="position:absolute;bottom:30px;left:24px;display:grid;grid-template-columns:repeat(6,10px);gap:5px;opacity:0.15;">
-        <div id="gd-dots"></div>
-      </div>
-
-      <!-- Diagonal lines (top right) -->
-      <div id="gd-lines" style="position:absolute;top:0;right:0;width:180px;height:180px;overflow:hidden;opacity:0.15;">
-        <div style="position:absolute;top:20px;right:-40px;width:300px;height:8px;background:#fff;transform:rotate(45deg);"></div>
-        <div style="position:absolute;top:44px;right:-40px;width:300px;height:8px;background:#fff;transform:rotate(45deg);"></div>
-        <div style="position:absolute;top:68px;right:-40px;width:300px;height:8px;background:#fff;transform:rotate(45deg);"></div>
-      </div>
-
-      <!-- Player cutout -->
-      <img id="gd-player-img" src="" alt="" style="position:absolute;right:-10px;bottom:0;height:90%;object-fit:contain;object-position:bottom;display:none;filter:drop-shadow(-8px 0 24px rgba(0,0,0,0.3));">
-
-      <!-- Pistons logo top right -->
-      <img src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" style="position:absolute;top:20px;right:20px;width:56px;height:56px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));z-index:10;">
-
-      <!-- Main text content -->
-      <div style="position:absolute;left:28px;top:50px;right:240px;z-index:10;">
-
-        <!-- Label -->
-        <div id="gd-label-lines" style="margin-bottom:8px;"></div>
-
-        <!-- VS -->
-        <div id="gd-vs-line" style="font-size:52px;font-weight:900;font-style:italic;color:#C8102E;line-height:1;margin-bottom:12px;letter-spacing:-1px;">VS</div>
-
-        <!-- Opponent logo -->
-        <img id="gd-opp-logo" src="" style="width:120px;height:120px;object-fit:contain;display:none;margin-bottom:8px;">
-
-        <!-- Date & time -->
-        <div id="gd-datetime" style="font-size:22px;font-weight:700;color:#888;line-height:1.4;letter-spacing:1px;"></div>
-      </div>
-
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
-  console.log('appended, rect:', JSON.stringify(modal.getBoundingClientRect()));
-  gdLoadFromMainGame();
+  // Get current game data
+  const mainSel = document.getElementById('game-select');
+  const idx = mainSel ? parseInt(mainSel.value) : -1;
+  const e = (window.scheduleGames || [])[idx];
+  
+  let gameData = null;
+  if (e) {
+    const opp = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation !== 'DET');
+    const det = e.competitions?.[0]?.competitors?.find(c => c.team?.abbreviation === 'DET');
+    gameData = {
+      date: e.date,
+      isHome: det?.homeAway === 'home',
+      opp: opp?.team?.shortDisplayName || opp?.team?.displayName || '?',
+      oppLogo: opp?.team?.logos?.[0]?.href || ''
+    };
+  }
+  
+  // Store in sessionStorage and open new tab
+  sessionStorage.setItem('gdGameData', JSON.stringify(gameData));
+  window.open('gameday.html', '_blank');
 }
+
 
 function gdLoadFromMainGame() {
   const mainSel = document.getElementById('game-select');
