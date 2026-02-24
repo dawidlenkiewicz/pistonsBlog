@@ -162,6 +162,11 @@ function setAccent(col, el) { gdAccent=col; document.querySelectorAll('#acc .s')
 function setLBg(col, el)    { lBg=col;     document.querySelectorAll('#lbg .s').forEach(d=>d.classList.remove('active')); el.classList.add('active'); gdRender(); }
 function setRBg(col, el)    { rBg=col;     document.querySelectorAll('#rbg .s').forEach(d=>d.classList.remove('active')); el.classList.add('active'); gdRender(); }
 
+function playerImg(url, side, size, vert, shadow) {
+  if (!url) return '';
+  return '<img src="' + url + '" style="position:absolute;bottom:' + vert + 'px;' + side + ';height:' + size + '%;object-fit:contain;object-position:bottom;filter:' + shadow + ';z-index:3;">';
+}
+
 function gdRender() {
   const label    = document.getElementById('gd-label').value;
   const leftUrl  = document.getElementById('url-left').value.trim();
@@ -214,9 +219,9 @@ function gdRender() {
       <div style="position:absolute;top:0;right:0;bottom:0;width:50%;background:${rBg};clip-path:polygon(8% 0%,100% 0%,100% 100%,0% 100%);"></div>
 
       <!-- left player -->
-      \${leftUrl ? `<img src="\${leftUrl}" style="position:absolute;bottom:\${leftVert}px;left:-30px;height:\${leftSize}%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
+      ${playerImg(leftUrl, 'left:-30px', leftSize, leftVert, 'drop-shadow(8px 0 20px rgba(0,0,0,0.6))')}
       <!-- right player -->
-      \${rightUrl ? `<img src="\${rightUrl}" style="position:absolute;bottom:\${rightVert}px;right:-30px;height:\${rightSize}%;object-fit:contain;object-position:bottom;filter:drop-shadow(-8px 0 20px rgba(0,0,0,0.5));z-index:3;">` : ''}
+      ${playerImg(rightUrl, 'right:-30px', rightSize, rightVert, 'drop-shadow(-8px 0 20px rgba(0,0,0,0.5))')}
     </div>
 
     <!-- BOTTOM text -->
