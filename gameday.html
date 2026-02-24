@@ -18,78 +18,31 @@ body { background: #080808; display: flex; height: 100vh; overflow: hidden; font
 .close-btn { background: none; border: none; color: #444; font-size: 16px; cursor: pointer; }
 .close-btn:hover { color: #ccc; }
 .panel-body { padding: 14px 16px; }
-.field-label { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; margin-bottom: 5px; margin-top: 12px; }
-.field-label:first-child { margin-top: 0; }
+.fl { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; margin-bottom: 5px; margin-top: 12px; }
+.fl:first-child { margin-top: 0; }
 select, input[type=text], input[type=url] {
   width: 100%; background: #161616; border: 1px solid #222; color: #ccc;
   padding: 8px 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; outline: none;
 }
 select:focus, input:focus { border-color: #444; }
-.swatches { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
-.swatch { width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; }
-.swatch.active { outline: 2px solid #fff; outline-offset: 2px; }
-.game-info { font-size: 11px; color: #C8102E; font-weight: 700; letter-spacing: 1px; padding: 8px 10px; background: #111; border-left: 2px solid #C8102E; margin-bottom: 12px; }
-.hint { font-size: 9px; color: #1e1e1e; margin-top: 3px; line-height: 1.5; }
-.hint a { color: #333; }
-.section-divider { border: none; border-top: 1px solid #1a1a1a; margin: 14px 0; }
-.section-head { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #C8102E; margin-bottom: 8px; }
+.sw { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.s { width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; }
+.s.active { outline: 2px solid #fff; outline-offset: 2px; }
+.gi { font-size: 11px; color: #C8102E; font-weight: 700; letter-spacing: 1px; padding: 8px 10px; background: #111; border-left: 2px solid #C8102E; margin-bottom: 12px; }
+.ht { font-size: 9px; color: #1e1e1e; margin-top: 3px; line-height: 1.5; }
+.ht a { color: #333; }
+.sd { border: none; border-top: 1px solid #1a1a1a; margin: 14px 0; }
+.sh { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #C8102E; margin-bottom: 8px; }
 
 #preview {
   flex: 1; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 30px; overflow-y: auto; background: #060606; gap: 16px;
+  justify-content: center; padding: 30px; overflow-y: auto; background: #060606; gap: 12px;
 }
-.preview-label { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; }
+.pl { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; }
 
 #gd-card {
-  display: flex; width: 900px; height: 500px;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a;
-  flex-shrink: 0; position: relative;
-}
-
-/* COL 1 */
-#col-player { width: 300px; min-width: 300px; position: relative; overflow: hidden; }
-#col1-bg { position: absolute; inset: 0; }
-#col1-cut {
-  position: absolute; top: 0; bottom: 0; right: 0; width: 4px;
-  z-index: 4;
-}
-#col-player-img {
-  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-  height: 95%; object-fit: contain; object-position: bottom center;
-  display: none; filter: drop-shadow(0 0 30px rgba(0,0,0,0.5)); z-index: 2;
-}
-#col-opp-logo {
-  position: absolute; bottom: 16px; left: 16px; width: 54px; height: 54px;
-  object-fit: contain; display: none; z-index: 3;
-  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.5));
-}
-
-/* COL 2 */
-#col-text {
-  width: 260px; min-width: 260px; flex-shrink: 0; position: relative; overflow: hidden; background: #111;
-  display: flex; flex-direction: column; justify-content: center; padding: 28px 24px;
-}
-#col2-cut {
-  position: absolute; top: 0; bottom: 0; right: 0; width: 4px;
-  z-index: 4;
-}
-
-/* COL 3 */
-#col-right { flex: 1; position: relative; overflow: hidden; }
-#col3-bg { position: absolute; inset: 0; }
-#col3-pattern {
-  position: absolute; inset: 0; z-index: 1;
-  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 20px);
-}
-#col-right-img {
-  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-  height: 95%; object-fit: contain; object-position: bottom center;
-  display: none; filter: drop-shadow(0 0 30px rgba(0,0,0,0.4)); z-index: 2;
-}
-#col-det-logo {
-  position: absolute; top: 16px; right: 16px; width: 54px; height: 54px;
-  object-fit: contain; z-index: 3;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  width: 360px; height: 640px; position: relative; overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a;
 }
 </style>
 </head>
@@ -102,28 +55,11 @@ select:focus, input:focus { border-color: #444; }
   </div>
   <div class="panel-body">
 
-    <div id="gd-game-info" class="game-info">No game loaded</div>
+    <div id="gd-game-info" class="gi">No game loaded</div>
 
-    <div class="section-head">◀ Left Column</div>
+    <div class="sh">General</div>
 
-    <div class="field-label">Player Cutout URL</div>
-    <input type="url" id="gd-player-url" placeholder="https://…" oninput="gdRender()">
-    <div class="hint">Use <a href="https://remove.bg" target="_blank">remove.bg</a> first</div>
-
-    <div class="field-label">Background</div>
-    <div class="swatches" id="col1-bgs">
-      <div class="swatch" style="background:#1d428a;" onclick="setCol1Bg('#1d428a',this)"></div>
-      <div class="swatch active" style="background:#0a0a0a;border:1px solid #333;" onclick="setCol1Bg('#0a0a0a',this)"></div>
-      <div class="swatch" style="background:#C8102E;" onclick="setCol1Bg('#C8102E',this)"></div>
-      <div class="swatch" style="background:#fff;border:1px solid #444;" onclick="setCol1Bg('#ffffff',this)"></div>
-      <div class="swatch" style="background:#f5c518;" onclick="setCol1Bg('#f5c518',this)"></div>
-      <input type="color" id="col1-custom" value="#0a0a0a" oninput="col1Bg=this.value;document.querySelectorAll('#col1-bgs .swatch').forEach(d=>d.classList.remove('active'));gdRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
-    </div>
-
-    <hr class="section-divider">
-    <div class="section-head">▶ Middle Column</div>
-
-    <div class="field-label">Label</div>
+    <div class="fl">Label</div>
     <select id="gd-label" onchange="gdRender()">
       <option value="HOME GAME DAY">HOME GAME DAY</option>
       <option value="AWAY GAME DAY">AWAY GAME DAY</option>
@@ -131,157 +67,149 @@ select:focus, input:focus { border-color: #444; }
       <option value="MATCH DAY">MATCH DAY</option>
     </select>
 
-    <div class="field-label">Accent + Cut Color</div>
-    <div class="swatches" id="gd-accents">
-      <div class="swatch active" style="background:#C8102E;" onclick="setAccent('#C8102E',this)"></div>
-      <div class="swatch" style="background:#1d428a;" onclick="setAccent('#1d428a',this)"></div>
-      <div class="swatch" style="background:#f5c518;" onclick="setAccent('#f5c518',this)"></div>
-      <div class="swatch" style="background:#fff;border:1px solid #444;" onclick="setAccent('#ffffff',this)"></div>
-      <div class="swatch" style="background:#000;border:1px solid #444;" onclick="setAccent('#000000',this)"></div>
-      <input type="color" id="accent-custom" value="#C8102E" oninput="setAccentCustom(this.value);" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
+    <div class="fl">Accent Color</div>
+    <div class="sw" id="acc">
+      <div class="s active" style="background:#C8102E;" onclick="setAccent('#C8102E',this)"></div>
+      <div class="s" style="background:#1d428a;" onclick="setAccent('#1d428a',this)"></div>
+      <div class="s" style="background:#f5c518;" onclick="setAccent('#f5c518',this)"></div>
+      <div class="s" style="background:#fff;border:1px solid #444;" onclick="setAccent('#ffffff',this)"></div>
+      <input type="color" value="#C8102E" oninput="gdAccent=this.value;document.querySelectorAll('#acc .s').forEach(d=>d.classList.remove('active'));gdRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
     </div>
 
-    <hr class="section-divider">
-    <div class="section-head">▶ Right Column</div>
+    <hr class="sd">
+    <div class="sh">◀ Left Player</div>
 
-    <div class="field-label">2nd Player Cutout <span style="color:#222;font-weight:400;letter-spacing:0;text-transform:none;">optional</span></div>
-    <input type="url" id="gd-player2-url" placeholder="https://…" oninput="gdRender()">
+    <div class="fl">Cutout URL</div>
+    <input type="url" id="url-left" placeholder="https://…" oninput="gdRender()">
+    <div class="ht">Use <a href="https://remove.bg" target="_blank">remove.bg</a> first</div>
 
-    <div class="field-label">Background</div>
-    <div class="swatches" id="col3-bgs">
-      <div class="swatch active" style="background:#C8102E;" onclick="setCol3Bg('#C8102E',this)"></div>
-      <div class="swatch" style="background:#1d428a;" onclick="setCol3Bg('#1d428a',this)"></div>
-      <div class="swatch" style="background:#0a0a0a;border:1px solid #333;" onclick="setCol3Bg('#0a0a0a',this)"></div>
-      <div class="swatch" style="background:#f5c518;" onclick="setCol3Bg('#f5c518',this)"></div>
-      <input type="color" id="col3-custom" value="#C8102E" oninput="col3Bg=this.value;document.querySelectorAll('#col3-bgs .swatch').forEach(d=>d.classList.remove('active'));gdRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
+    <div class="fl">Background</div>
+    <div class="sw" id="lbg">
+      <div class="s active" style="background:#1d428a;" onclick="setLBg('#1d428a',this)"></div>
+      <div class="s" style="background:#0a0a0a;border:1px solid #333;" onclick="setLBg('#0a0a0a',this)"></div>
+      <div class="s" style="background:#C8102E;" onclick="setLBg('#C8102E',this)"></div>
+      <div class="s" style="background:#f5c518;" onclick="setLBg('#f5c518',this)"></div>
+      <input type="color" value="#1d428a" oninput="lBg=this.value;document.querySelectorAll('#lbg .s').forEach(d=>d.classList.remove('active'));gdRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
     </div>
 
-    <div class="hint" style="margin-top:24px;text-align:center;color:#1a1a1a;">Screenshot: Cmd+Shift+4 · Win+Shift+S</div>
+    <hr class="sd">
+    <div class="sh">▶ Right Player</div>
+
+    <div class="fl">Cutout URL</div>
+    <input type="url" id="url-right" placeholder="https://…" oninput="gdRender()">
+
+    <div class="fl">Background</div>
+    <div class="sw" id="rbg">
+      <div class="s active" style="background:#C8102E;" onclick="setRBg('#C8102E',this)"></div>
+      <div class="s" style="background:#1d428a;" onclick="setRBg('#1d428a',this)"></div>
+      <div class="s" style="background:#0a0a0a;border:1px solid #333;" onclick="setRBg('#0a0a0a',this)"></div>
+      <div class="s" style="background:#f5c518;" onclick="setRBg('#f5c518',this)"></div>
+      <input type="color" value="#C8102E" oninput="rBg=this.value;document.querySelectorAll('#rbg .s').forEach(d=>d.classList.remove('active'));gdRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
+    </div>
+
+    <div class="ht" style="margin-top:24px;text-align:center;color:#1a1a1a;">Screenshot: Cmd+Shift+4 · Win+Shift+S</div>
   </div>
 </div>
 
 <div id="preview">
-  <div class="preview-label">Screenshot the card below ↓</div>
+  <div class="pl">Screenshot the card below ↓</div>
   <div id="gd-card">
-
-    <!-- COL 1: Left player -->
-    <div id="col-player">
-      <div id="col1-bg"></div>
-      <div id="col1-cut"></div>
-      <img id="col-player-img" src="" alt="">
-      <img id="col-opp-logo" src="" alt="">
-    </div>
-
-    <!-- COL 2: Text -->
-    <div id="col-text">
-      <div id="col2-cut"></div>
-      <div id="col-label-lines" style="margin-bottom:12px;"></div>
-      <div id="col-vs" style="font-size:36px;font-weight:900;font-style:italic;line-height:1;margin-bottom:14px;letter-spacing:-1px;color:#C8102E;">VS</div>
-      <div id="col-opp-name-mid" style="font-size:52px;font-weight:900;font-style:italic;line-height:0.9;letter-spacing:0px;color:#fff;text-transform:uppercase;"></div>
-    </div>
-
-    <!-- COL 3: Right player + Pistons logo -->
-    <div id="col-right">
-      <div id="col3-bg"></div>
-      <div id="col3-pattern"></div>
-      <img id="col-right-img" src="" alt="">
-      <img id="col-det-logo" src="https://a.espncdn.com/i/teamlogos/nba/500/det.png" alt="DET">
-    </div>
-
+    <!-- rendered by JS -->
   </div>
 </div>
 
 <script>
 let gdAccent = '#C8102E';
-let col1Bg = '#0a0a0a';
-let col3Bg = '#C8102E';
+let lBg = '#1d428a';
+let rBg = '#C8102E';
 let gdGame = null;
+
+const DET_LOGO = 'https://a.espncdn.com/i/teamlogos/nba/500/det.png';
+const CARD_H = 640, CARD_W = 360;
+const TOP_H = 160, BOT_H = 108;
+const MID_TOP = TOP_H + 2, MID_H = CARD_H - TOP_H - BOT_H - 2;
 
 try {
   const raw = sessionStorage.getItem('gdGameData');
-  if (raw) { gdGame = JSON.parse(raw); console.log('Game loaded:', gdGame); }
-} catch(e) { console.error(e); }
+  if (raw) { gdGame = JSON.parse(raw); }
+} catch(e) {}
 
 function init() {
   if (gdGame) {
     const d = new Date(gdGame.date);
-    const dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
-    document.getElementById('gd-game-info').textContent = dateStr + ' ' + (gdGame.isHome ? 'vs' : '@') + ' ' + gdGame.opp;
+    const ds = d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    document.getElementById('gd-game-info').textContent = ds + ' ' + (gdGame.isHome ? 'vs' : '@') + ' ' + gdGame.opp;
     document.getElementById('gd-label').value = gdGame.isHome ? 'HOME GAME DAY' : 'AWAY GAME DAY';
-
-    if (gdGame.oppLogo) {
-      document.getElementById('col-opp-logo').src = gdGame.oppLogo;
-      document.getElementById('col-opp-logo').style.display = 'block';
-    }
-    if (gdGame.opp) {
-      document.getElementById('col-opp-name-mid').textContent = gdGame.opp.toUpperCase();
-    }
   } else {
     document.getElementById('gd-game-info').textContent = 'Select a game in main app first';
   }
   gdRender();
 }
 
-function setAccent(col, el) {
-  gdAccent = col;
-  document.querySelectorAll('#gd-accents .swatch').forEach(d => d.classList.remove('active'));
-  el.classList.add('active');
-  gdRender();
-}
-function setAccentCustom(col) {
-  gdAccent = col;
-  document.querySelectorAll('#gd-accents .swatch').forEach(d => d.classList.remove('active'));
-  gdRender();
-}
-function setCol1Bg(col, el) {
-  col1Bg = col;
-  document.querySelectorAll('#col1-bgs .swatch').forEach(d => d.classList.remove('active'));
-  if (el) el.classList.add('active');
-  gdRender();
-}
-function setCol3Bg(col, el) {
-  col3Bg = col;
-  document.querySelectorAll('#col3-bgs .swatch').forEach(d => d.classList.remove('active'));
-  if (el) el.classList.add('active');
-  gdRender();
-}
+function setAccent(col, el) { gdAccent=col; document.querySelectorAll('#acc .s').forEach(d=>d.classList.remove('active')); el.classList.add('active'); gdRender(); }
+function setLBg(col, el)    { lBg=col;     document.querySelectorAll('#lbg .s').forEach(d=>d.classList.remove('active')); el.classList.add('active'); gdRender(); }
+function setRBg(col, el)    { rBg=col;     document.querySelectorAll('#rbg .s').forEach(d=>d.classList.remove('active')); el.classList.add('active'); gdRender(); }
 
 function gdRender() {
-  const label = document.getElementById('gd-label').value;
-  const playerUrl = document.getElementById('gd-player-url').value.trim();
-  const player2Url = document.getElementById('gd-player2-url').value.trim();
+  const label    = document.getElementById('gd-label').value;
+  const leftUrl  = document.getElementById('url-left').value.trim();
+  const rightUrl = document.getElementById('url-right').value.trim();
+  const isHome   = gdGame ? gdGame.isHome : true;
+  const oppLogo  = gdGame?.oppLogo || '';
+  const oppCity  = gdGame?.oppFull ? gdGame.oppFull.split(' ').slice(0,-1).join(' ') : (gdGame?.opp || 'Opponent');
 
-  // Col 1
-  document.getElementById('col1-bg').style.background = col1Bg;
-  document.getElementById('col1-cut').style.background = gdAccent;
+  // Scoreboard: away on left, home on right
+  const scoreLLeft = isHome ? oppLogo  : DET_LOGO;
+  const scoreLRight= isHome ? DET_LOGO : oppLogo;
+  const scoreNLeft = isHome ? oppCity  : 'Detroit';
+  const scoreNRight= isHome ? 'Detroit': oppCity;
 
-  const pImg = document.getElementById('col-player-img');
-  if (playerUrl) { pImg.src = playerUrl; pImg.style.display = 'block'; }
-  else pImg.style.display = 'none';
-
-  // Col 2 — cut uses middle bg color (#111) so it blends seamlessly
-  document.getElementById('col2-cut').style.background = gdAccent;
-  document.getElementById('col-vs').style.color = gdAccent;
-
-  // Label lines
+  // Label split: HOME/AWAY small on top, rest big
   const words = label.split(' ');
-  let labelHtml = '';
-  words.forEach((w, i) => {
-    const isSmall = words.length > 2 && i === 0 && w.length <= 5;
-    if (isSmall) {
-      labelHtml += `<div style="font-size:18px;font-weight:900;font-style:italic;color:${gdAccent};line-height:1;letter-spacing:1px;">${w}</div>`;
-    } else {
-      labelHtml += `<div style="font-size:46px;font-weight:900;font-style:italic;color:#fff;line-height:0.88;letter-spacing:0px;">${w}</div>`;
-    }
-  });
-  document.getElementById('col-label-lines').innerHTML = labelHtml;
+  const hasPrefix = words.length > 2 && (words[0]==='HOME'||words[0]==='AWAY');
+  const smallText = hasPrefix ? words[0] : '';
+  const bigText   = hasPrefix ? words.slice(1).join(' ') : label;
 
-  // Col 3
-  document.getElementById('col3-bg').style.background = col3Bg;
+  document.getElementById('gd-card').innerHTML = `
+    <div style="position:absolute;inset:0;background:#0d0d14;"></div>
 
-  const p2Img = document.getElementById('col-right-img');
-  if (player2Url) { p2Img.src = player2Url; p2Img.style.display = 'block'; }
-  else p2Img.style.display = 'none';
+    <!-- TOP scoreboard -->
+    <div style="position:absolute;top:14px;left:12px;right:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:14px 18px;z-index:5;display:flex;align-items:center;justify-content:space-between;">
+      <div style="text-align:center;">
+        <img src="${scoreLLeft}" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#444;margin-top:5px;text-transform:uppercase;">${scoreNLeft}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <div style="width:1px;height:12px;background:#2a2a2a;"></div>
+        <div style="font-size:24px;font-weight:900;font-style:italic;color:${gdAccent};">VS</div>
+        <div style="width:1px;height:12px;background:#2a2a2a;"></div>
+      </div>
+      <div style="text-align:center;">
+        <img src="${scoreLRight}" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#444;margin-top:5px;text-transform:uppercase;">${scoreNRight}</div>
+      </div>
+    </div>
+
+    <!-- MIDDLE diagonal split -->
+    <div style="position:absolute;top:${MID_TOP}px;left:0;right:0;height:${MID_H}px;overflow:hidden;">
+      <!-- left bg -->
+      <div style="position:absolute;inset:0;background:${lBg};"></div>
+      <!-- right bg -->
+      <div style="position:absolute;top:0;right:0;bottom:0;width:52%;background:${rBg};clip-path:polygon(22% 0%,100% 0%,100% 100%,0% 100%);"></div>
+      <!-- cut line -->
+      <div style="position:absolute;top:0;bottom:0;left:calc(48% - 2px);width:4px;background:${gdAccent};transform:skewX(-4deg);z-index:4;opacity:0.65;"></div>
+      <!-- left player -->
+      ${leftUrl ? `<img src="${leftUrl}" style="position:absolute;bottom:0;left:-10px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
+      <!-- right player -->
+      ${rightUrl ? `<img src="${rightUrl}" style="position:absolute;bottom:0;right:-10px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(-8px 0 20px rgba(0,0,0,0.5));z-index:3;">` : ''}
+    </div>
+
+    <!-- BOTTOM text -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:${BOT_H}px;display:flex;flex-direction:column;justify-content:center;padding:0 22px 16px;z-index:5;">
+      ${smallText ? `<div style="font-size:10px;font-weight:700;letter-spacing:3px;color:${gdAccent};margin-bottom:0;">${smallText}</div>` : ''}
+      <div style="font-size:56px;font-weight:900;font-style:italic;color:#fff;line-height:0.88;letter-spacing:0;">${bigText}</div>
+    </div>
+  `;
 }
 
 init();
