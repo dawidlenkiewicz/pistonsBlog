@@ -83,6 +83,12 @@ select:focus, input:focus { border-color: #444; }
     <input type="url" id="url-left" placeholder="https://…" oninput="gdRender()">
     <div class="ht">Use <a href="https://remove.bg" target="_blank">remove.bg</a> first</div>
 
+    <div class="fl">Size <span id="left-size-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">100%</span></div>
+    <input type="range" id="size-left" min="50" max="160" value="100" oninput="document.getElementById('left-size-val').textContent=this.value+'%';gdRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
+
+    <div class="fl">Vertical <span id="left-vert-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">0px</span></div>
+    <input type="range" id="vert-left" min="-120" max="80" value="0" oninput="document.getElementById('left-vert-val').textContent=this.value+'px';gdRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
+
     <div class="fl">Background</div>
     <div class="sw" id="lbg">
       <div class="s active" style="background:#1d428a;" onclick="setLBg('#1d428a',this)"></div>
@@ -97,6 +103,12 @@ select:focus, input:focus { border-color: #444; }
 
     <div class="fl">Cutout URL</div>
     <input type="url" id="url-right" placeholder="https://…" oninput="gdRender()">
+
+    <div class="fl">Size <span id="right-size-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">100%</span></div>
+    <input type="range" id="size-right" min="50" max="160" value="100" oninput="document.getElementById('right-size-val').textContent=this.value+'%';gdRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
+
+    <div class="fl">Vertical <span id="right-vert-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">0px</span></div>
+    <input type="range" id="vert-right" min="-120" max="80" value="0" oninput="document.getElementById('right-vert-val').textContent=this.value+'px';gdRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
 
     <div class="fl">Background</div>
     <div class="sw" id="rbg">
@@ -154,6 +166,10 @@ function gdRender() {
   const label    = document.getElementById('gd-label').value;
   const leftUrl  = document.getElementById('url-left').value.trim();
   const rightUrl = document.getElementById('url-right').value.trim();
+  const leftSize  = document.getElementById('size-left').value;
+  const rightSize = document.getElementById('size-right').value;
+  const leftVert  = document.getElementById('vert-left').value;
+  const rightVert = document.getElementById('vert-right').value;
   const isHome   = gdGame ? gdGame.isHome : true;
   const oppLogo  = gdGame?.oppLogo || '';
   const oppCity  = gdGame?.oppFull ? gdGame.oppFull.split(' ').slice(0,-1).join(' ') : (gdGame?.opp || 'Opponent');
@@ -198,9 +214,9 @@ function gdRender() {
       <div style="position:absolute;top:0;right:0;bottom:0;width:50%;background:${rBg};clip-path:polygon(8% 0%,100% 0%,100% 100%,0% 100%);"></div>
 
       <!-- left player -->
-      ${leftUrl ? `<img src="${leftUrl}" style="position:absolute;bottom:0;left:-30px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
+      \${leftUrl ? `<img src="\${leftUrl}" style="position:absolute;bottom:\${leftVert}px;left:-30px;height:\${leftSize}%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
       <!-- right player -->
-      ${rightUrl ? `<img src="${rightUrl}" style="position:absolute;bottom:0;right:-30px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(-8px 0 20px rgba(0,0,0,0.5));z-index:3;">` : ''}
+      \${rightUrl ? `<img src="\${rightUrl}" style="position:absolute;bottom:\${rightVert}px;right:-30px;height:\${rightSize}%;object-fit:contain;object-position:bottom;filter:drop-shadow(-8px 0 20px rgba(0,0,0,0.5));z-index:3;">` : ''}
     </div>
 
     <!-- BOTTOM text -->
