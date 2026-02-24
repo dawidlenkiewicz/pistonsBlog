@@ -126,7 +126,7 @@ let gdGame = null;
 
 const DET_LOGO = 'https://a.espncdn.com/i/teamlogos/nba/500/det.png';
 const CARD_H = 640, CARD_W = 360;
-const TOP_H = 160, BOT_H = 108;
+const TOP_H = 180, BOT_H = 116;
 const MID_TOP = TOP_H + 2, MID_H = CARD_H - TOP_H - BOT_H - 2;
 
 try {
@@ -176,7 +176,7 @@ function gdRender() {
     <!-- TOP scoreboard -->
     <div style="position:absolute;top:14px;left:12px;right:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:14px 18px;z-index:5;display:flex;align-items:center;justify-content:space-between;">
       <div style="text-align:center;">
-        <img src="${scoreLLeft}" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
+        <img src="${scoreLLeft}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
         <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#444;margin-top:5px;text-transform:uppercase;">${scoreNLeft}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
@@ -185,7 +185,7 @@ function gdRender() {
         <div style="width:1px;height:12px;background:#2a2a2a;"></div>
       </div>
       <div style="text-align:center;">
-        <img src="${scoreLRight}" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
+        <img src="${scoreLRight}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
         <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#444;margin-top:5px;text-transform:uppercase;">${scoreNRight}</div>
       </div>
     </div>
@@ -196,17 +196,16 @@ function gdRender() {
       <div style="position:absolute;inset:0;background:${lBg};"></div>
       <!-- right bg -->
       <div style="position:absolute;top:0;right:0;bottom:0;width:52%;background:${rBg};clip-path:polygon(22% 0%,100% 0%,100% 100%,0% 100%);"></div>
-      <!-- cut line -->
-      <div style="position:absolute;top:0;bottom:0;left:calc(48% - 2px);width:4px;background:${gdAccent};transform:skewX(-4deg);z-index:4;opacity:0.65;"></div>
+
       <!-- left player -->
-      ${leftUrl ? `<img src="${leftUrl}" style="position:absolute;bottom:0;left:-10px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
+      ${leftUrl ? `<img src="${leftUrl}" style="position:absolute;bottom:0;left:-30px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
       <!-- right player -->
-      ${rightUrl ? `<img src="${rightUrl}" style="position:absolute;bottom:0;right:-10px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(-8px 0 20px rgba(0,0,0,0.5));z-index:3;">` : ''}
+      ${rightUrl ? `<img src="${rightUrl}" style="position:absolute;bottom:0;right:-30px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(-8px 0 20px rgba(0,0,0,0.5));z-index:3;">` : ''}
     </div>
 
     <!-- BOTTOM text -->
     <div style="position:absolute;bottom:0;left:0;right:0;height:${BOT_H}px;display:flex;flex-direction:column;justify-content:center;padding:0 22px 16px;z-index:5;">
-      ${smallText ? `<div style="font-size:10px;font-weight:700;letter-spacing:3px;color:${gdAccent};margin-bottom:0;">${smallText}</div>` : ''}
+      ${smallText ? `<div style="font-size:14px;font-weight:700;letter-spacing:3px;color:${gdAccent};margin-bottom:0;">${smallText}</div>` : ''}
       <div style="font-size:56px;font-weight:900;font-style:italic;color:#fff;line-height:0.88;letter-spacing:0;">${bigText}</div>
     </div>
   `;
