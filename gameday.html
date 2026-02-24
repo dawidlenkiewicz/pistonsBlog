@@ -126,7 +126,7 @@ let gdGame = null;
 
 const DET_LOGO = 'https://a.espncdn.com/i/teamlogos/nba/500/det.png';
 const CARD_H = 640, CARD_W = 360;
-const TOP_H = 180, BOT_H = 116;
+const TOP_H = 166, BOT_H = 116;
 const MID_TOP = TOP_H + 2, MID_H = CARD_H - TOP_H - BOT_H - 2;
 
 try {
@@ -174,7 +174,7 @@ function gdRender() {
     <div style="position:absolute;inset:0;background:#0d0d14;"></div>
 
     <!-- TOP scoreboard -->
-    <div style="position:absolute;top:14px;left:12px;right:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:14px 18px;z-index:5;display:flex;align-items:center;justify-content:space-between;">
+    <div style="position:absolute;top:12px;left:12px;right:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:14px 18px;z-index:5;display:flex;align-items:center;justify-content:space-between;">
       <div style="text-align:center;">
         <img src="${scoreLLeft}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
         <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#444;margin-top:5px;text-transform:uppercase;">${scoreNLeft}</div>
@@ -194,8 +194,8 @@ function gdRender() {
     <div style="position:absolute;top:${MID_TOP}px;left:0;right:0;height:${MID_H}px;overflow:hidden;">
       <!-- left bg -->
       <div style="position:absolute;inset:0;background:${lBg};"></div>
-      <!-- right bg -->
-      <div style="position:absolute;top:0;right:0;bottom:0;width:52%;background:${rBg};clip-path:polygon(22% 0%,100% 0%,100% 100%,0% 100%);"></div>
+      <!-- right bg: exact 50/50 split with thin diagonal -->
+      <div style="position:absolute;top:0;right:0;bottom:0;width:50%;background:${rBg};clip-path:polygon(8% 0%,100% 0%,100% 100%,0% 100%);"></div>
 
       <!-- left player -->
       ${leftUrl ? `<img src="${leftUrl}" style="position:absolute;bottom:0;left:-30px;height:98%;object-fit:contain;object-position:bottom;filter:drop-shadow(8px 0 20px rgba(0,0,0,0.6));z-index:3;">` : ''}
