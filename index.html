@@ -1353,7 +1353,7 @@ renderPlayers();
 </script>
 
 <!-- IMAGE CARD MODAL -->
-<div id="image-card-modal" style="display:none;position:fixed;inset:0;background:#080808;z-index:200;overflow:hidden;display:none;">
+<div id="image-card-modal" style="display:none;position:fixed;inset:0;background:#080808;z-index:200;overflow:hidden;">
   <div style="display:flex;height:100vh;overflow:hidden;">
 
     <!-- LEFT: Controls -->
@@ -1579,7 +1579,7 @@ async function triggerTranslation() {
       : '';
     const shortHtml = short
       ? '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">⚡ Short version</div>'
-        + '<div style="background:#111;border-left:2px solid #333;padding:10px 12px;cursor:pointer;" onclick="useOnCard(window._lastTranslation.short,'short')" title="Click to use on card">'
+        + '<div style="background:#111;border-left:2px solid #333;padding:10px 12px;cursor:pointer;" onclick="useOnCard(window._lastTranslation.short,\'short\')" title="Click to use on card">'
         + '<div style="font-size:13px;color:#888;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">' + short + '</div>'
         + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>'
         + '</div>'
@@ -1593,7 +1593,7 @@ async function triggerTranslation() {
         + '<div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">&ldquo;' + text + '&rdquo;</div>'
       + '</div>'
       + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">🇵🇱 Polski</div>'
-      + '<div style="background:#111;border-left:2px solid #333;padding:10px 12px;margin-bottom:10px;cursor:pointer;" onclick="useOnCard(window._lastTranslation.polish,'pl')" title="Click to use on card">'
+      + '<div style="background:#111;border-left:2px solid #333;padding:10px 12px;margin-bottom:10px;cursor:pointer;" onclick="useOnCard(window._lastTranslation.polish,\'pl\')" title="Click to use on card">'
         + '<div style="font-size:12px;color:#888;line-height:1.5;font-style:italic;">&ldquo;' + polish + '&rdquo;</div>'
         + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>'
       + '</div>'
