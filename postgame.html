@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post Game Card</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #080808; display: flex; height: 100vh; overflow: hidden; font-family: 'Barlow Condensed', sans-serif; color: #ccc; }
+
+#controls {
+  width: 240px; min-width: 240px; background: #0a0a0a;
+  border-right: 1px solid #1c1c1c; height: 100vh; overflow-y: auto; flex-shrink: 0;
+}
+.panel-header { padding: 14px 16px; border-bottom: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #C8102E; }
+.close-btn { background: none; border: none; color: #444; font-size: 16px; cursor: pointer; }
+.close-btn:hover { color: #ccc; }
+.panel-body { padding: 14px 16px; }
+.fl { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #333; margin-bottom: 5px; margin-top: 12px; }
+.fl:first-child { margin-top: 0; }
+select, input[type=text], input[type=url] {
+  width: 100%; background: #161616; border: 1px solid #222; color: #ccc;
+  padding: 8px 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; outline: none;
+}
+select:focus, input:focus { border-color: #444; }
+.sw { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.s { width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; }
+.s.active { outline: 2px solid #fff; outline-offset: 2px; }
+.gi { font-size: 11px; color: #C8102E; font-weight: 700; letter-spacing: 1px; padding: 8px 10px; background: #111; border-left: 2px solid #C8102E; margin-bottom: 12px; }
+.ht { font-size: 9px; color: #1e1e1e; margin-top: 3px; line-height: 1.5; }
+.ht a { color: #333; }
+.sd { border: none; border-top: 1px solid #1a1a1a; margin: 14px 0; }
+.sh { font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #C8102E; margin-bottom: 8px; }
+.pog-box { background: #111; border: 1px solid #b8942a33; padding: 10px 12px; margin-bottom: 12px; }
+.pog-name { font-size: 15px; font-weight: 900; font-style: italic; color: #b8942a; letter-spacing: 0; }
+.pog-stats { font-size: 10px; color: #555; margin-top: 3px; letter-spacing: 1px; }
+
+#preview {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 30px; overflow-y: auto; background: #060606; gap: 12px;
+}
+.pl { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; }
+
+#pg-card {
+  width: 360px; height: 640px; position: relative; overflow: hidden; flex-shrink: 0;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a;
+}
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <div class="panel-header">
+    <div class="panel-title">🏆 Post Game</div>
+    <button class="close-btn" onclick="window.close()">✕</button>
+  </div>
+  <div class="panel-body">
+
+    <div id="pg-game-info" class="gi">No game loaded</div>
+
+    <div class="sh">Player of the Game</div>
+    <div id="pog-box" class="pog-box">
+      <div class="pog-name" id="pog-name-display">No POG set</div>
+      <div class="pog-stats" id="pog-stats-display">Set POG in main app first</div>
+    </div>
+
+    <div class="fl">Player Cutout URL</div>
+    <input type="url" id="pg-player-url" placeholder="https://…" oninput="pgRender()">
+    <div class="ht">Use <a href="https://remove.bg" target="_blank">remove.bg</a> first</div>
+
+    <div class="fl">Size <span id="pg-size-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">100%</span></div>
+    <input type="range" id="pg-size" min="50" max="160" value="100" oninput="document.getElementById('pg-size-val').textContent=this.value+'%';pgRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
+
+    <div class="fl">Vertical <span id="pg-vert-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">0px</span></div>
+    <input type="range" id="pg-vert" min="-120" max="80" value="0" oninput="document.getElementById('pg-vert-val').textContent=this.value+'px';pgRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
+
+    <div class="fl">Horizontal <span id="pg-horiz-val" style="color:#555;font-weight:400;letter-spacing:0;text-transform:none;">0px</span></div>
+    <input type="range" id="pg-horiz" min="-120" max="120" value="0" oninput="document.getElementById('pg-horiz-val').textContent=this.value+'px';pgRender()" style="width:100%;accent-color:#C8102E;cursor:pointer;">
+
+    <hr class="sd">
+    <div class="sh">Style</div>
+
+    <div class="fl">Background</div>
+    <div class="sw" id="bg-swatches">
+      <div class="s active" style="background:#1d428a;" onclick="setBg('#1d428a',this)"></div>
+      <div class="s" style="background:#0a0a0a;border:1px solid #333;" onclick="setBg('#0a0a0a',this)"></div>
+      <div class="s" style="background:#C8102E;" onclick="setBg('#C8102E',this)"></div>
+      <div class="s" style="background:#1a1a1a;border:1px solid #333;" onclick="setBg('#1a1a1a',this)"></div>
+      <input type="color" value="#1d428a" oninput="bgColor=this.value;document.querySelectorAll('#bg-swatches .s').forEach(d=>d.classList.remove('active'));pgRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
+    </div>
+
+    <div class="fl">Accent Color</div>
+    <div class="sw" id="acc-swatches">
+      <div class="s active" style="background:#C8102E;" onclick="setAcc('#C8102E',this)"></div>
+      <div class="s" style="background:#1d428a;" onclick="setAcc('#1d428a',this)"></div>
+      <div class="s" style="background:#b8942a;" onclick="setAcc('#b8942a',this)"></div>
+      <div class="s" style="background:#fff;border:1px solid #444;" onclick="setAcc('#ffffff',this)"></div>
+      <input type="color" value="#C8102E" oninput="accColor=this.value;document.querySelectorAll('#acc-swatches .s').forEach(d=>d.classList.remove('active'));pgRender();" style="width:26px;height:26px;padding:1px;border:1px solid #333;background:#161616;cursor:pointer;">
+    </div>
+
+    <div class="ht" style="margin-top:24px;text-align:center;color:#1a1a1a;">Screenshot: Cmd+Shift+4 · Win+Shift+S</div>
+  </div>
+</div>
+
+<div id="preview">
+  <div class="pl">Screenshot the card below ↓</div>
+  <div id="pg-card"></div>
+</div>
+
+<script>
+let bgColor  = '#1d428a';
+let accColor = '#C8102E';
+let pgGame   = null;
+
+const DET_LOGO = 'https://a.espncdn.com/i/teamlogos/nba/500/det.png';
+const TOP_H = 166, BOT_H = 200;
+const MID_TOP = TOP_H + 2;
+const MID_H = 640 - TOP_H - BOT_H - 2;
+
+try {
+  const raw = sessionStorage.getItem('pgGameData');
+  if (raw) { pgGame = JSON.parse(raw); }
+} catch(e) {}
+
+function init() {
+  if (pgGame) {
+    const won = pgGame.detWon;
+    document.getElementById('pg-game-info').textContent =
+      (won ? '🏆 WIN' : '❌ LOSS') + ' · ' + pgGame.detScore + '–' + pgGame.awayScore + ' vs ' + pgGame.awayAbb;
+
+    if (pgGame.pog) {
+      const pog = pgGame.pog;
+      document.getElementById('pog-name-display').textContent = pog.name;
+      const statStr = Object.entries(pog.stats).slice(0,4).map(([k,v]) => k+': '+v).join(' · ');
+      document.getElementById('pog-stats-display').textContent = statStr + (pog.grade ? ' · ' + pog.grade : '');
+    } else {
+      document.getElementById('pog-name-display').textContent = 'No POG set';
+      document.getElementById('pog-stats-display').textContent = 'Go back and click ⭐ POG on a player';
+    }
+  } else {
+    document.getElementById('pg-game-info').textContent = 'Load a game in main app first';
+  }
+  pgRender();
+}
+
+function setBg(col, el) {
+  bgColor = col;
+  document.querySelectorAll('#bg-swatches .s').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  pgRender();
+}
+function setAcc(col, el) {
+  accColor = col;
+  document.querySelectorAll('#acc-swatches .s').forEach(d => d.classList.remove('active'));
+  if (el) el.classList.add('active');
+  pgRender();
+}
+
+function pgRender() {
+  const playerUrl = document.getElementById('pg-player-url').value.trim();
+  const size  = document.getElementById('pg-size').value;
+  const vert  = document.getElementById('pg-vert').value;
+  const horiz = document.getElementById('pg-horiz').value;
+
+  const won      = pgGame?.detWon ?? true;
+  const detScore = pgGame?.detScore ?? '—';
+  const oppScore = pgGame?.awayScore ?? '—';
+  const oppName  = pgGame?.awayAbb ?? 'OPP';
+  const oppLogo  = pgGame?.oppLogo || '';
+  const detIsHome= pgGame?.detIsHome ?? true;
+  const pog      = pgGame?.pog || null;
+
+  // Score display: away left, home right
+  const leftScore  = detIsHome ? oppScore : detScore;
+  const rightScore = detIsHome ? detScore : oppScore;
+  const leftLogo   = detIsHome ? oppLogo  : DET_LOGO;
+  const rightLogo  = detIsHome ? DET_LOGO : oppLogo;
+  const leftName   = detIsHome ? oppName  : 'Pistons';
+  const rightName  = detIsHome ? 'Pistons': oppName;
+  const leftDim    = detIsHome ? 'opacity:0.5;' : '';
+  const rightDim   = detIsHome ? '' : 'opacity:0.5;';
+  const leftCol    = detIsHome ? (won ? '#555' : accColor) : (won ? accColor : '#555');
+  const rightCol   = detIsHome ? (won ? accColor : '#555') : (won ? '#555' : accColor);
+
+  // Stats chips from POG
+  let statsHtml = '';
+  if (pog?.stats) {
+    const topStats = Object.entries(pog.stats).slice(0, 4);
+    statsHtml = topStats.map(([k,v], idx) =>
+      `<div style="background:${idx===0?accColor:'rgba(255,255,255,0.1)'};padding:5px 12px;font-size:14px;font-weight:700;color:#fff;letter-spacing:1px;">${v} ${k}</div>`
+    ).join('');
+    if (pog.grade) {
+      statsHtml += `<div style="background:rgba(255,255,255,0.1);padding:5px 12px;font-size:14px;font-weight:700;color:#fff;letter-spacing:1px;">${pog.grade}</div>`;
+    }
+  }
+
+  const pogName = pog?.name || '';
+  const pogFirstName = pogName.split(' ')[0] || '';
+  const pogLastName  = pogName.split(' ').slice(1).join(' ') || '';
+
+  const playerImg = playerUrl
+    ? `<img src="${playerUrl}" style="position:absolute;bottom:${vert}px;left:calc(50% + ${horiz}px);transform:translateX(-50%);height:${size}%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 0 40px rgba(0,0,0,0.5));z-index:2;">`
+    : '';
+
+  document.getElementById('pg-card').innerHTML = `
+    <div style="position:absolute;inset:0;background:#0d0d14;"></div>
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,${bgColor}55,transparent 65%);z-index:1;"></div>
+
+    <!-- TOP: scoreboard panel -->
+    <div style="position:absolute;top:14px;left:12px;right:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:14px 18px;z-index:5;display:flex;align-items:center;justify-content:space-between;">
+      <div style="text-align:center;">
+        <img src="${leftLogo}" style="width:100px;height:100px;object-fit:contain;${leftDim}filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#777;margin-top:5px;text-transform:uppercase;">${leftName}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:44px;font-weight:900;font-style:italic;color:${leftCol};line-height:1;">${leftScore}</div>
+          <div style="font-size:16px;color:#2a2a2a;">—</div>
+          <div style="font-size:44px;font-weight:900;font-style:italic;color:${rightCol};line-height:1;">${rightScore}</div>
+        </div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:3px;color:${accColor};margin-top:2px;">FINAL</div>
+      </div>
+      <div style="text-align:center;">
+        <img src="${rightLogo}" style="width:100px;height:100px;object-fit:contain;${rightDim}filter:drop-shadow(0 2px 10px rgba(0,0,0,0.8));" onerror="this.style.display='none'">
+        <div style="font-size:8px;font-weight:700;letter-spacing:2px;color:#777;margin-top:5px;text-transform:uppercase;">${rightName}</div>
+      </div>
+    </div>
+
+    <!-- PLAYER PHOTO -->
+    <div style="position:absolute;top:${MID_TOP}px;left:0;right:0;bottom:${BOT_H}px;overflow:hidden;background:${bgColor};">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,${bgColor},${bgColor}99);"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,#0d0d14 20%,transparent);z-index:3;"></div>
+      ${playerImg}
+    </div>
+
+    <!-- BOTTOM: POG info -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:${BOT_H}px;padding:14px 22px 24px;z-index:5;display:flex;flex-direction:column;justify-content:flex-end;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:3px;color:${accColor};margin-bottom:4px;">PLAYER OF THE GAME</div>
+      ${pogName ? `
+        <div style="font-size:52px;font-weight:900;font-style:italic;color:#fff;line-height:0.85;margin-bottom:10px;letter-spacing:0;">${pogFirstName}<br>${pogLastName}</div>
+      ` : `<div style="font-size:32px;font-weight:900;font-style:italic;color:#333;margin-bottom:10px;">SET POG IN APP</div>`}
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">${statsHtml}</div>
+    </div>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>

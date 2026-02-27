@@ -168,6 +168,7 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
       <button class="btn-export" onclick="openExport()">Export HTML →</button>
       <button class="btn-export" onclick="openImageCard()" style="background:#7c3f00;border:1px solid #a0520020;">🖼 Image Card →</button>
       <button class="btn-export" onclick="console.log('BTN CLICKED'); try { openGameDay(); console.log('openGameDay done'); } catch(err) { console.error('openGameDay THREW:', err); alert('Error: ' + err.message); }" style="background:#003a7c;border:1px solid #0052a020;">📅 Game Day →</button>
+      <button class="btn-export" onclick="openPostGame()" style="background:#1a3a1a;border:1px solid #2a5a2a20;">🏆 Post Game →</button>
     </div>
   </div>
 
@@ -398,6 +399,7 @@ function renderAB(p, i, container) {
       <div class="player-pos">${p.pos}</div>
       <div class="player-header-right">
         <button class="btn-toggle${s.included?'':' re-add'}" onclick="togglePlayer(${i})">${s.included?'Remove':'Add'}</button>
+        <button class="btn-toggle" onclick="setPOG(${i})" style="border-color:#b8942a;color:#b8942a;" title="Set as Player of the Game">⭐ POG</button>
       </div>
     </div>
     <div class="stat-line">${chips}</div>
@@ -469,6 +471,7 @@ function renderThemeC(container) {
               <input type="checkbox" id="outstanding-${i}" ${s.outstanding?'checked':''} onchange="playerState[${i}].outstanding=this.checked;renderPlayers()" style="accent-color:#b8942a;">
               ⭐ Outstanding
             </label>
+            <button class="btn-toggle" onclick="setPOG(${i})" style="border-color:#b8942a;color:#b8942a;" title="Set as Player of the Game">⭐ POG</button>
           </div>
         </div>
       </div>`;
@@ -1568,29 +1571,34 @@ async function triggerTranslation() {
     const polish = result.polish || raw;
     const short  = result.short || '';
 
-    list.innerHTML = `
-      <div style="margin-bottom:16px;">
-        <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;margin-bottom:8px;">${context || 'Quote'}</div>
+    // Store results globally to avoid escaping issues in onclick
+    window._lastTranslation = { polish, short };
 
-        <div style="background:#111;border-left:2px solid #C8102E;padding:10px 12px;margin-bottom:10px;">
-          ${speaker ? `<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">${speaker}</div>` : ''}
-          <div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">"${text}"</div>
-        </div>
+    const speakerHtml = speaker
+      ? '<div style="font-family:Barlow Condensed,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#C8102E;margin-bottom:4px;">' + speaker + '</div>'
+      : '';
+    const shortHtml = short
+      ? '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">⚡ Short version</div>'
+        + '<div style="background:#111;border-left:2px solid #333;padding:10px 12px;cursor:pointer;" onclick="useOnCard(window._lastTranslation.short,'short')" title="Click to use on card">'
+        + '<div style="font-size:13px;color:#888;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">' + short + '</div>'
+        + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>'
+        + '</div>'
+      : '';
 
-        <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">🇵🇱 Polski</div>
-        <div style="background:#111;border-left:2px solid #333;padding:10px 12px;margin-bottom:10px;cursor:pointer;" onclick="useOnCard('${polish.replace(/'/g,"\'")}', 'pl')" title="Click to use on card">
-          <div style="font-size:12px;color:#888;line-height:1.5;font-style:italic;">"${polish}"</div>
-          <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>
-        </div>
-
-        ${short ? `
-        <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">⚡ Short version</div>
-        <div style="background:#111;border-left:2px solid #333;padding:10px 12px;cursor:pointer;" onclick="useOnCard('${short.replace(/'/g,"\'")}', 'short')" title="Click to use on card">
-          <div style="font-size:13px;color:#888;font-weight:700;font-family:Barlow Condensed,sans-serif;letter-spacing:1px;text-transform:uppercase;">${short}</div>
-          <div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>
-        </div>` : ''}
-      </div>
-    `;
+    list.innerHTML =
+      '<div style="margin-bottom:16px;">'
+      + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#444;margin-bottom:8px;">' + (context || 'Quote') + '</div>'
+      + '<div style="background:#111;border-left:2px solid #C8102E;padding:10px 12px;margin-bottom:10px;">'
+        + speakerHtml
+        + '<div style="font-size:12px;color:#ccc;line-height:1.5;font-style:italic;">&ldquo;' + text + '&rdquo;</div>'
+      + '</div>'
+      + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#333;margin-bottom:6px;">🇵🇱 Polski</div>'
+      + '<div style="background:#111;border-left:2px solid #333;padding:10px 12px;margin-bottom:10px;cursor:pointer;" onclick="useOnCard(window._lastTranslation.polish,'pl')" title="Click to use on card">'
+        + '<div style="font-size:12px;color:#888;line-height:1.5;font-style:italic;">&ldquo;' + polish + '&rdquo;</div>'
+        + '<div style="font-family:Barlow Condensed,sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#222;margin-top:4px;">Click to use on card →</div>'
+      + '</div>'
+      + shortHtml
+      + '</div>';
   } catch(e) {
     list.innerHTML = '<div style="color:#444;font-size:11px;margin-top:20px;text-align:center;">' + e.message + '</div>';
   }
@@ -1736,6 +1744,47 @@ function updateCard() {
 <script>
 let gdAccent = '#C8102E';
 let gdBg = '#fff';
+
+let pogData = null;
+
+function setPOG(i) {
+  const p = players[i];
+  const s = playerState[i];
+  const stats = getStats(p);
+  pogData = {
+    name: p.name,
+    grade: s.grade || '',
+    stats: stats,
+    notes: s.notes || ''
+  };
+  // Flash the button
+  document.querySelectorAll('[onclick*="setPOG"]').forEach(b => {
+    b.style.background = '';
+    b.textContent = '⭐ POG';
+  });
+  const btn = document.querySelector(`[onclick="setPOG(${i})"]`);
+  if (btn) { btn.style.background = '#b8942a22'; btn.textContent = '✅ POG Set'; }
+  console.log('POG set:', pogData);
+}
+
+function openPostGame() {
+  const awayScore = document.getElementById('sb-away-score').textContent;
+  const detScore  = document.getElementById('sb-det-score').textContent;
+  const awayName  = document.getElementById('sb-away-name').textContent;
+  const badge     = document.getElementById('sb-badge').textContent;
+  const detWon    = parseInt(detScore) > parseInt(awayScore);
+  const detIsHome = document.getElementById('sb-det-home')?.dataset?.home === 'true';
+  const oppLogo   = document.getElementById('sb-away-logo')?.src || '';
+  const awayAbb   = (awayName.split(' ').pop() || 'OPP').toUpperCase();
+
+  const data = {
+    detScore, awayScore, awayName, awayAbb, oppLogo,
+    detWon, detIsHome, badge,
+    pog: pogData
+  };
+  sessionStorage.setItem('pgGameData', JSON.stringify(data));
+  window.open('postgame.html', '_blank');
+}
 
 function openGameDay() {
   // Get current game data
