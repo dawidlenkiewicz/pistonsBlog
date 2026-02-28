@@ -39,12 +39,16 @@ select:focus, input:focus { border-color: #444; }
   justify-content: center; padding: 30px; overflow-y: auto; background: #060606; gap: 12px;
 }
 .pl { font-size: 9px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #1e1e1e; }
+.dl-btn { background: #C8102E; color: #fff; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 10px 24px; cursor: pointer; margin-top: 4px; }
+.dl-btn:hover { background: #a50d24; }
+.dl-btn:disabled { background: #333; color: #666; cursor: default; }
 
 #gd-card {
   width: 360px; height: 640px; position: relative; overflow: hidden; flex-shrink: 0;
   box-shadow: 0 30px 80px rgba(0,0,0,0.9), 0 0 0 1px #1a1a1a;
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -130,7 +134,8 @@ select:focus, input:focus { border-color: #444; }
 </div>
 
 <div id="preview">
-  <div class="pl">Screenshot the card below ↓</div>
+  <div class="pl">Screenshot or download below ↓</div>
+  <button class="dl-btn" id="dl-btn" onclick="downloadCard()">⬇ Download PNG</button>
   <div id="gd-card">
     <!-- rendered by JS -->
   </div>
@@ -247,6 +252,25 @@ function gdRender() {
 }
 
 init();
+
+function downloadCard() {
+  const btn = document.getElementById('dl-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Rendering…';
+  const card = document.getElementById('gd-card');
+  html2canvas(card, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'gameday.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.disabled = false;
+    btn.textContent = '⬇ Download PNG';
+  }).catch(err => {
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = '⬇ Download PNG';
+  });
+}
 </script>
 </body>
 </html>
