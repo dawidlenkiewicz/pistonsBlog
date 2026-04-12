@@ -178,6 +178,7 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
     <select class="game-select" id="game-select">
       <option value="">⏳ Loading schedule…</option>
     </select>
+    <button class="btn-load-game" id="btn-playoffs" onclick="togglePlayoffs()" style="background:#1a1a2e;border:1px solid #333;color:#888;white-space:nowrap;">⚡ Playoffs</button>
     <button class="btn-load-game" id="btn-load-game" onclick="loadSelectedGame()" disabled>Load Game</button>
   </div>
 
@@ -812,13 +813,28 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
 
+let isPlayoffs = false;
+
+function togglePlayoffs() {
+  isPlayoffs = !isPlayoffs;
+  const btn = document.getElementById('btn-playoffs');
+  btn.style.background = isPlayoffs ? '#C8102E' : '#1a1a2e';
+  btn.style.color = isPlayoffs ? '#fff' : '#888';
+  btn.style.borderColor = isPlayoffs ? '#C8102E' : '#333';
+  btn.textContent = isPlayoffs ? '🏆 Playoffs ON' : '⚡ Playoffs';
+  loadSchedule();
+}
+
 async function loadSchedule() {
   const sel = document.getElementById('game-select');
   const btn = document.getElementById('btn-load-game');
   try {
     // Fetch full season by hitting scoreboard with 2-month chunks — no proxy needed
     // ESPN scoreboard works cross-origin directly from browser
-    const chunks = [
+    const chunks = isPlayoffs ? [
+      '20260415-20260531',
+      '20260601-20260630',
+    ] : [
       '20251001-20251231',
       '20260101-20260228',
       '20260301-20260415',
@@ -827,7 +843,7 @@ async function loadSchedule() {
     await Promise.all(chunks.map(async range => {
       try {
         const r = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${range}&limit=1000`
+          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${range}&limit=1000${isPlayoffs ? "&seasontype=3" : ""}`
         );
         if (!r.ok) return;
         const d = await r.json();
