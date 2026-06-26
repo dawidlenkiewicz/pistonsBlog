@@ -1549,6 +1549,26 @@ function openImageCard() {
   updateCard();
 }
 
+async function fetchDataURL(src) {
+  const proxies = [
+    'https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/img-proxy?url=' + encodeURIComponent(src),
+    'https://corsproxy.io/?' + encodeURIComponent(src),
+  ];
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      return await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.readAsDataURL(blob);
+      });
+    } catch(e) { continue; }
+  }
+  return null;
+}
+
 async function downloadImageCard() {
   const btn = document.getElementById('ic2-dl-btn');
   btn.disabled = true;
@@ -1557,8 +1577,23 @@ async function downloadImageCard() {
   const w = card.offsetWidth;
   const h = card.offsetHeight;
   card.style.height = h + 'px';
+
+  const photoIds = ['ic2-photo', 'ic2-photo-top', 'ic2-photo-bot'];
+  const photoEls = photoIds.map(id => document.getElementById(id)).filter(el => {
+    if (!el) return false;
+    const attr = el.getAttribute('src');
+    return attr && !attr.startsWith('data:') && el.style.display !== 'none';
+  });
+  const origSrcs = photoEls.map(el => el.getAttribute('src'));
+  const BLANK_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  await Promise.all(photoEls.map(async (el, i) => {
+    const dataUrl = await fetchDataURL(origSrcs[i]);
+    el.src = dataUrl || BLANK_PNG;
+  }));
+
   try {
-    const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: null, width: w, height: h });
+    const canvas = await html2canvas(card, { scale: 3, allowTaint: true, backgroundColor: null, width: w, height: h });
+    photoEls.forEach((el, i) => { el.src = origSrcs[i]; });
     card.style.height = '';
     const link = document.createElement('a');
     const headline = document.getElementById('ic2-headline').value.trim().replace(/\s+/g, '-').toLowerCase() || 'card';
@@ -1567,6 +1602,7 @@ async function downloadImageCard() {
     link.click();
   } catch(err) {
     console.error(err);
+    photoEls.forEach((el, i) => { el.src = origSrcs[i]; });
     card.style.height = '';
   }
   btn.disabled = false;
@@ -1717,9 +1753,7 @@ function updateCard() {
     // DUAL PHOTO MODE
     const top = document.getElementById('ic2-photo-top');
     const bot = document.getElementById('ic2-photo-bot');
-    top.crossOrigin = 'anonymous'; bot.crossOrigin = 'anonymous';
-    top.src = 'https://corsproxy.io/?' + encodeURIComponent(url);
-    bot.src = 'https://corsproxy.io/?' + encodeURIComponent(url2);
+    top.src = url; bot.src = url2;
 
     // gradient on top photo fades downward, bottom fades upward
     document.getElementById('ic2-gradient-top').style.background =
@@ -1756,8 +1790,7 @@ function updateCard() {
     const err   = document.getElementById('ic2-error');
     if (url) {
       photo.style.display = 'block';
-      photo.crossOrigin = 'anonymous';
-      photo.src = 'https://corsproxy.io/?' + encodeURIComponent(url);
+      photo.src = url;
       photo.onerror = () => { photo.style.display = 'none'; err.style.display = 'flex'; };
       photo.onload  = () => { err.style.display = 'none'; };
     } else {
