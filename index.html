@@ -1550,8 +1550,10 @@ function openImageCard() {
 }
 
 async function fetchDataURL(src) {
+  const proxied = 'https://soft-thunder-98e8.dawid-lenkiewicz86.workers.dev/img-proxy?url=' + encodeURIComponent(src);
   try {
-    const res = await fetch(src);
+    const res = await fetch(proxied);
+    if (!res.ok) throw new Error(res.status);
     const blob = await res.blob();
     return await new Promise(resolve => {
       const reader = new FileReader();
