@@ -157,6 +157,7 @@ textarea#html-output { width: 100%; height: 180px; font-family: monospace; font-
 .preview-label { font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
 .modal-preview-wrap { background: #f0f1f6; padding: 24px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div class="app-wrapper">
@@ -1382,6 +1383,7 @@ renderPlayers();
       
       <div style="display:flex;gap:10px;margin-bottom:24px;align-items:center;">
         <button onclick="document.getElementById('image-card-modal').style.display='none'" style="background:#1a1a1a;color:#666;border:1px solid #222;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;cursor:pointer;">← Back</button>
+        <button id="ic2-dl-btn" onclick="downloadImageCard()" style="background:#C8102E;color:#fff;border:none;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;cursor:pointer;flex:1;">⬇ Download PNG</button>
       </div>
 
       <div style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#C8102E;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
@@ -1545,6 +1547,26 @@ let ic2Accent = '#C8102E';
 function openImageCard() {
   document.getElementById('image-card-modal').style.display = 'flex';
   updateCard();
+}
+
+function downloadImageCard() {
+  const btn = document.getElementById('ic2-dl-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Rendering…';
+  const card = document.getElementById('ic2-card');
+  html2canvas(card, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null }).then(canvas => {
+    const link = document.createElement('a');
+    const headline = document.getElementById('ic2-headline').value.trim().replace(/\s+/g, '-').toLowerCase() || 'card';
+    link.download = headline + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.disabled = false;
+    btn.textContent = '⬇ Download PNG';
+  }).catch(err => {
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = '⬇ Download PNG';
+  });
 }
 
 function translateQuote() {
