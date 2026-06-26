@@ -1554,7 +1554,12 @@ function downloadImageCard() {
   btn.disabled = true;
   btn.textContent = '⏳ Rendering…';
   const card = document.getElementById('ic2-card');
-  html2canvas(card, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null }).then(canvas => {
+  const w = card.offsetWidth;
+  const h = card.offsetHeight;
+  // html2canvas doesn't handle CSS aspect-ratio reliably — pin explicit px dimensions
+  card.style.height = h + 'px';
+  html2canvas(card, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null, width: w, height: h }).then(canvas => {
+    card.style.height = '';
     const link = document.createElement('a');
     const headline = document.getElementById('ic2-headline').value.trim().replace(/\s+/g, '-').toLowerCase() || 'card';
     link.download = headline + '.png';
@@ -1564,6 +1569,7 @@ function downloadImageCard() {
     btn.textContent = '⬇ Download PNG';
   }).catch(err => {
     console.error(err);
+    card.style.height = '';
     btn.disabled = false;
     btn.textContent = '⬇ Download PNG';
   });
