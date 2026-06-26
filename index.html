@@ -1549,30 +1549,55 @@ function openImageCard() {
   updateCard();
 }
 
-function downloadImageCard() {
+async function fetchDataURL(src) {
+  try {
+    const res = await fetch(src);
+    const blob = await res.blob();
+    return await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) {
+    return null;
+  }
+}
+
+async function downloadImageCard() {
   const btn = document.getElementById('ic2-dl-btn');
   btn.disabled = true;
   btn.textContent = '⏳ Rendering…';
   const card = document.getElementById('ic2-card');
   const w = card.offsetWidth;
   const h = card.offsetHeight;
-  // html2canvas doesn't handle CSS aspect-ratio reliably — pin explicit px dimensions
   card.style.height = h + 'px';
-  html2canvas(card, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: null, width: w, height: h }).then(canvas => {
+
+  // Swap cross-origin photo srcs to data URLs so html2canvas can draw them
+  const photoIds = ['ic2-photo', 'ic2-photo-top', 'ic2-photo-bot'];
+  const photoEls = photoIds.map(id => document.getElementById(id))
+    .filter(el => el && el.src && !el.src.startsWith('data:') && el.style.display !== 'none');
+  const origSrcs = photoEls.map(el => el.src);
+  await Promise.all(photoEls.map(async (el, i) => {
+    const dataUrl = await fetchDataURL(el.src);
+    if (dataUrl) el.src = dataUrl;
+  }));
+
+  try {
+    const canvas = await html2canvas(card, { scale: 3, allowTaint: true, backgroundColor: null, width: w, height: h });
+    photoEls.forEach((el, i) => { el.src = origSrcs[i]; });
     card.style.height = '';
     const link = document.createElement('a');
     const headline = document.getElementById('ic2-headline').value.trim().replace(/\s+/g, '-').toLowerCase() || 'card';
     link.download = headline + '.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
-    btn.disabled = false;
-    btn.textContent = '⬇ Download PNG';
-  }).catch(err => {
+  } catch(err) {
     console.error(err);
+    photoEls.forEach((el, i) => { el.src = origSrcs[i]; });
     card.style.height = '';
-    btn.disabled = false;
-    btn.textContent = '⬇ Download PNG';
-  });
+  }
+  btn.disabled = false;
+  btn.textContent = '⬇ Download PNG';
 }
 
 function translateQuote() {
