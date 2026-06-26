@@ -1582,10 +1582,11 @@ async function downloadImageCard() {
     return attr && !attr.startsWith('data:') && el.style.display !== 'none';
   });
   const origSrcs = photoEls.map(el => el.getAttribute('src'));
+  const BLANK_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
   await Promise.all(photoEls.map(async (el, i) => {
     const dataUrl = await fetchDataURL(origSrcs[i]);
-    // If proxy failed, blank the src so html2canvas doesn't taint the canvas
-    el.src = dataUrl || '';
+    // Use blank pixel if proxy failed — empty src resolves to page URL which html2canvas tries to load
+    el.src = dataUrl || BLANK_PNG;
   }));
 
   try {
