@@ -1576,12 +1576,16 @@ async function downloadImageCard() {
 
   // Swap cross-origin photo srcs to data URLs so html2canvas can draw them
   const photoIds = ['ic2-photo', 'ic2-photo-top', 'ic2-photo-bot'];
-  const photoEls = photoIds.map(id => document.getElementById(id))
-    .filter(el => el && el.src && !el.src.startsWith('data:') && el.style.display !== 'none');
-  const origSrcs = photoEls.map(el => el.src);
+  const photoEls = photoIds.map(id => document.getElementById(id)).filter(el => {
+    if (!el) return false;
+    const attr = el.getAttribute('src');
+    return attr && !attr.startsWith('data:') && el.style.display !== 'none';
+  });
+  const origSrcs = photoEls.map(el => el.getAttribute('src'));
   await Promise.all(photoEls.map(async (el, i) => {
-    const dataUrl = await fetchDataURL(el.src);
-    if (dataUrl) el.src = dataUrl;
+    const dataUrl = await fetchDataURL(origSrcs[i]);
+    // If proxy failed, blank the src so html2canvas doesn't taint the canvas
+    el.src = dataUrl || '';
   }));
 
   try {
