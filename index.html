@@ -687,7 +687,7 @@ ${notesBlock}
 
 <!-- SUPPI SUPPORT BUTTON -->
 <div style="text-align:center;padding:14px 0 6px;">
-  <a href="https://suppi.pl/pistonspoland" target="_blank"><img width="165" src="https://suppi.pl/api/widget/button.svg?fill=6457FD&textColor=ffffff"/></a>
+  <a href="https://buycoffee.to/pistonspoland" target="_blank"><img width="165" src="https://suppi.pl/api/widget/button.svg?fill=6457FD&textColor=ffffff"/></a>
 </div>
 
 <!-- SECTION HEADER -->
@@ -1639,7 +1639,12 @@ async function triggerTranslation() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'openrouter/auto',
+        // Pinned model: 'openrouter/auto' routes to reasoning models that burn the
+        // whole token budget on reasoning and return truncated garbage.
+        model: 'openai/gpt-4o-mini',
+        // Without max_tokens the request asks for the model max (65k) and gets
+        // rejected with a 402 "requires more credits".
+        max_tokens: 400,
         messages: [{
           role: 'user',
           content: 'Translate this NBA quote to Polish. Return ONLY a JSON object with two keys: "polish" (the translation) and "short" (a punchy 6-word max Polish version for a social media caption). No markdown, no explanation.\n\nQuote: "' + text + '"'
@@ -1647,8 +1652,11 @@ async function triggerTranslation() {
       })
     });
     const d = await resp.json();
-    const raw = d.choices?.[0]?.message?.content || '{}';
+    // The worker answers 200 even when the upstream API errors, so check the body.
+    if (d.error) throw new Error(d.error.message || 'API error');
+    const raw = d.choices?.[0]?.message?.content;
     console.log('Translation raw:', raw);
+    if (!raw) throw new Error('Empty response from model');
     let result;
     try { result = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
     catch(e) { result = { polish: raw, short: '' }; }
@@ -1685,7 +1693,7 @@ async function triggerTranslation() {
       + shortHtml
       + '</div>';
   } catch(e) {
-    list.innerHTML = '<div style="color:#444;font-size:11px;margin-top:20px;text-align:center;">' + e.message + '</div>';
+    list.innerHTML = '<div style="color:#C8102E;font-size:11px;margin-top:20px;text-align:center;line-height:1.5;">' + e.message + '</div>';
   }
 
   btn.textContent = 'Translate to Polish';
