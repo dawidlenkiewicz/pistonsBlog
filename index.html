@@ -835,33 +835,17 @@ async function loadSchedule() {
   const sel = document.getElementById('game-select');
   const btn = document.getElementById('btn-load-game');
   try {
-    // Fetch full season by hitting scoreboard with 2-month chunks — no proxy needed
-    // ESPN scoreboard works cross-origin directly from browser
-    const chunks = isPlayoffs ? [
-      '20260415-20260531',
-      '20260601-20260630',
-    ] : [
-      '20251001-20251231',
-      '20260101-20260228',
-      '20260301-20260415',
-    ];
-    const allEvents = [];
-    await Promise.all(chunks.map(async range => {
-      try {
-        const r = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${range}&limit=1000${isPlayoffs ? "&seasontype=3" : ""}`
-        );
-        if (!r.ok) return;
-        const d = await r.json();
-        (d.events || []).forEach(ev => {
-          // Only keep Pistons games
-          const comps = ev.competitions?.[0]?.competitors || [];
-          if (comps.some(c => c.team?.abbreviation === 'DET')) allEvents.push(ev);
-        });
-      } catch {}
-    }));
-    if (!allEvents.length) throw new Error('No Pistons games found');
-    const json = { events: allEvents };
+    // ESPN team schedule works cross-origin directly from browser — no proxy needed.
+    // (The scoreboard ?dates=YYYYMMDD-YYYYMMDD range query now returns 400.)
+    // ESPN labels a season by the year it ends: Aug 2026 onwards → 2027 (the 2026-27 season)
+    const now = new Date();
+    const season = now.getMonth() >= 7 ? now.getFullYear() + 1 : now.getFullYear();
+    const r = await fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/det/schedule?season=${season}&seasontype=${isPlayoffs ? 3 : 2}`
+    );
+    if (!r.ok) throw new Error(`ESPN returned ${r.status}`);
+    const json = await r.json();
+    if (!json.events?.length) throw new Error(isPlayoffs ? 'No Pistons playoff games yet' : 'No Pistons games found');
 
     // Filter completed games, sort newest first
     // ESPN schedule uses 'events' or 'games' depending on endpoint version
@@ -907,7 +891,15 @@ async function loadSchedule() {
 
     btn.disabled = false;
 
-    // Auto-load the most recent game
+    // Auto-load the most recent completed game. The list includes upcoming games, so the
+    // top entry is the last game of the season; before tip-off fall back to the next game.
+    const isDone = e => {
+      const st = e.competitions?.[0]?.status?.type;
+      return st?.completed === true || st?.state === 'post';
+    };
+    let startIdx = scheduleGames.findIndex(isDone);
+    if (startIdx === -1) startIdx = scheduleGames.length - 1;
+    sel.value = String(startIdx);
     loadSelectedGame();
 
   } catch(err) {
